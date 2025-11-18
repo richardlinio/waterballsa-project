@@ -163,6 +163,70 @@ YouTube 播放器需要瀏覽器 API，因此元件必須是客戶端元件：
 
 ---
 
+## 影片進度儲存與恢復
+
+### 獲取當前播放秒數
+
+使用 `getCurrentTime()` 方法獲取影片當前播放位置（單位：秒）：
+
+```javascript
+const handleReady = (event) => {
+	const player = event.target
+
+	// 每隔 10 秒獲取當前播放秒數
+	setInterval(() => {
+		const currentTime = player.getCurrentTime()
+		console.log('當前播放秒數:', currentTime)
+
+		// 呼叫後端 API 儲存進度
+		saveProgressToBackend(unitId, currentTime)
+	}, 10000) // 每 10 秒執行一次
+}
+```
+
+### 儲存進度到後端
+
+```javascript
+async function saveProgressToBackend(unitId, currentTime) {
+	await fetch('/api/video-progress', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			unitId: unitId,
+			currentTime: currentTime,
+			updatedAt: new Date().toISOString()
+		})
+	})
+}
+```
+
+### 從特定秒數開始播放
+
+使用 `seekTo(seconds, allowSeekAhead)` 方法跳到指定秒數：
+
+```javascript
+const handleReady = async (event) => {
+	const player = event.target
+
+	// 從後端取得上次觀看的秒數
+	const response = await fetch(`/api/video-progress/${unitId}`)
+	const data = await response.json()
+
+	if (data.currentTime > 0) {
+		// 跳到上次觀看的秒數
+		player.seekTo(data.currentTime, true)
+		console.log('從', data.currentTime, '秒繼續播放')
+	}
+}
+```
+
+**重要提示：**
+- `seekTo` 的第二個參數 `allowSeekAhead` 設為 `true`，允許跳到未緩衝的位置
+- 建議只在進度 > 5 秒時才恢復播放，避免使用者體驗不佳
+- 可在影片接近結尾（如 > 95%）時不恢復，直接從頭播放
+
+---
+
 ## 常見問題
 
 ### Q1: 未公開影片可以使用這個方法嗎？
