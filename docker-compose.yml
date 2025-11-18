@@ -1,8 +1,8 @@
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./www_root/waterballsa-backend
+      dockerfile: ../../java/docker_file/Dockerfile
     depends_on:
       db:
         condition: service_healthy
@@ -23,8 +23,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ./www_root/waterballsa-frontend
+      dockerfile: ../../next/docker_file/Dockerfile
     depends_on:
       backend:
         condition: service_healthy
