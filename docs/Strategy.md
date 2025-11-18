@@ -35,24 +35,11 @@
 
 ---
 
-## PM 溝通確認要點（2025-11-17）
+## 時程規劃
 
-### 溝通模式
-- ✅ **DC 非同步溝通**為主（留言串討論）
-- ❌ 不需要語音/電話溝通
-- ✅ **技術細節不需特別回報**，PM 關注使用者體驗
-
-### 確認的功能優先級
-**Release 1**：權限 + 看課
-- 註冊/登入
-- 觀看影片
-- 交付並累積經驗值
-
-**Release 2**：購課 + 排行榜
-- 購課流程（**簡化版金流**，不串真實金流，用按鈕模擬）
-- 經驗值排行榜
-
-**延後實作**：作業、道館挑戰
+- **Release 0**（非正式）：Day 4-5 完成權限模組，快速確認登入登出
+- **Release 1**：Day 5 完成權限 + 看課完整功能
+- **Release 2**：Day 7 完成購課 + 排行榜
 
 ---
 
@@ -60,7 +47,7 @@
 
 ### Day 1-2：研究 + 規劃 + 技術驗證（20%）
 
-#### Day 1（今天）✅ 已完成
+#### Day 1（2025-11-17）✅ 已完成
 
 **上午**：註冊帳號，完整體驗平台（4 小時）
 
@@ -78,91 +65,159 @@
 
 **晚上**：技術環境建置（3 小時）
 
-- [ ] Spring Boot + PostgreSQL + Next.js + Docker Compose
-- [ ] 用 AI 幫你快速建立 boilerplate
+- [x] Spring Boot + PostgreSQL + Next.js + Docker Compose
+- [x] 用 AI 幫你快速建立 boilerplate
 - [ ] **第一次 Release**：提交「專案架構規劃」到 Discord
 
-#### Day 2
+#### Day 2（2025-11-18 今天）✅ 部分完成
 
-**上午**：學習關鍵技術（4 小時）
+**已完成**：
 
-- [ ] Spring Boot 基礎（REST API、JPA）
-- [ ] Next.js 基礎（App Router、Server Components）
-- [ ] 只學「夠用」的部分，不要深入
+- [x] 前後端 Docker 與專案架構建置
+- [x] 建立前後端空專案
+- [x] E2E 測試環境初步建置（Playwright）
+- [x] 與 PM 確認影片進度追蹤細節
+- [x] 更新 Release 1 規格文件（v03）
 
-**下午**：E2E 測試環境（4 小時）
+**待完成**：
 
-- [ ] 選擇 Playwright（Next.js 官方推薦）
-- [ ] 建立第一個測試（登入/註冊）
-- [ ] 讓 AI 幫你寫測試框架
+- [ ] 資料庫 Schema 設計與建立
+- [ ] API 文件規劃（Swagger/OpenAPI）
+- [] Spring Boot 基礎學習（REST API、JPA）
+- [ ] Next.js 基礎學習（App Router、Server Components）
 
-**晚上**：完成第一個功能（3 小時）
+**晚上**（今天）：
 
-- [ ] **Release 1**：使用者註冊/登入
-- [ ] **第二次 Release**：錄影 Demo + 提交到 Discord
+- [ ] 完成資料庫 Schema 設計（User、Course、Chapter、Unit、Progress 等）
+- [ ] 建立 API 文件草稿
+- [ ] 完成技術學習的「夠用」部分
 
 ---
 
 ### Day 3-7：核心功能開發（50%）
 
-**策略**：依 PM 確認的優先級，聚焦 Release 1 & 2
+**策略**：依 PM 確認的優先級，聚焦 Release 1 & 2，採用小步快跑方式
 
-#### Release 1（Day 3-5）：權限 + 看課核心功能
+#### Day 3（2025-11-19）：資料庫 Schema + 基礎 API
 
-**功能範疇**：
+**上午**：資料庫實作（4 小時）
 
-**權限模組**
-- [ ] 使用者註冊（Email + 密碼）
-- [ ] 使用者登入（JWT Token）
-- [ ] 登入狀態保持
+- [ ] 完成 PostgreSQL Schema（User、Course、Chapter、Unit、VideoProgress、Submission）
+- [ ] 建立 JPA Entity 與 Repository
+- [ ] 測試資料庫連線與基礎 CRUD
 
-**看課模組**
-- [ ] 課程列表頁面
-- [ ] 課程詳情頁（章節 > 單元結構）
-- [ ] 影片播放（用 YouTube embed 簡化）
-- [ ] 觀看進度追蹤（百分比 / 已看時長）
-- [ ] 交付功能（簡化版：按鈕觸發）
-- [ ] 交付後累積經驗值
+**下午**：權限模組後端（4 小時）
 
-**每日節奏**：
+- [ ] 實作註冊 API（POST /api/auth/register）
+- [ ] 實作登入 API（POST /api/auth/login）
+- [ ] JWT Token 生成與驗證
+- [ ] 測試帳號驗證邏輯
 
-- 上午：開發後端 API（4 小時）
-- 下午：開發前端頁面（4 小時）
-- 晚上：E2E 測試 + Discord 回報（3 小時）
+**晚上**：API 文件 + 技術驗證（3 小時）
 
-**Day 5 晚上**：
+- [ ] 更新 Swagger API 文件
+- [ ] 影片托管技術驗證（YouTube embed 或其他方案）
+- [ ] Discord 回報：資料庫設計與 API 規劃
 
-- [ ] 錄影 Demo Release 1
-- [ ] Discord 提交 Release 1
+#### Day 4（2025-11-20）：權限模組前端 + Release 0
+
+**上午**：權限模組前端（4 小時）
+
+- [ ] 實作註冊頁面（Next.js）
+- [ ] 實作登入頁面
+- [ ] 實作 JWT Token 存儲與狀態管理
+- [ ] 登入狀態保持（localStorage + cookie）
+
+**下午**：E2E 測試 + 整合（4 小時）
+
+- [ ] 註冊流程 E2E 測試
+- [ ] 登入流程 E2E 測試
+- [ ] 登入狀態保持測試
+- [ ] 整合測試與 bug 修復
+
+**晚上**：Release 0（非正式）（3 小時）
+
+- [ ] **錄影 Demo：權限模組展示**
+- [ ] **Discord 提交 Release 0**：請 PM 快速確認登入登出功能
+- [ ] 評估進度，必要時調整 Release 1 範疇
+
+#### Day 5（2025-11-21）：看課模組核心功能
+
+**上午**：課程列表與詳情（4 小時）
+
+- [ ] 課程列表 API（GET /api/courses）
+- [ ] 課程詳情 API（GET /api/courses/:id）
+- [ ] 課程列表頁面前端
+- [ ] 課程詳情頁面前端（含章節與單元結構）
+
+**下午**：影片播放與進度追蹤後端（4 小時）
+
+- [ ] 影片播放頁面（YouTube embed）
+- [ ] 觀看進度記錄 API（POST /api/progress）
+- [ ] 前端每 10 秒自動記錄進度邏輯
+- [ ] 自動判斷 100% 完成邏輯
+
+**晚上**：交付功能（3 小時）
+
+- [ ] 交付 API（POST /api/submissions）
+- [ ] 交付 UI（已完成單元顯示灰色圈圈）
+- [ ] 交付後累積經驗值（固定 +100）
+- [ ] 交付成功 UI 變綠色
+
+#### Day 6（2025-11-22）：Release 1 完成 + E2E 測試
+
+**上午**：整合測試與 Bug 修復（4 小時）
+
+- [ ] 完整用戶流程測試（註冊 → 登入 → 看課 → 交付）
+- [ ] 修復發現的 Bug
+- [ ] 補完觀看進度追蹤 E2E 測試
+- [ ] 補完交付功能 E2E 測試
+
+**下午**：Release 1 準備（4 小時）
+
+- [ ] 準備展示用測試資料（課程、章節、單元）
+- [ ] 確認所有功能正常運作
+- [ ] Docker Compose 一鍵啟動測試
+- [ ] 錄影準備與腳本規劃
+
+**晚上**：Release 1（3 小時）
+
+- [ ] **錄影 Demo Release 1**：展示完整權限 + 看課流程
+- [ ] **Discord 提交 Release 1**
+- [ ] 到 Discord 問：「Release 1 實作邏輯是否符合預期？」
 
 ---
 
-#### Release 2（Day 6-7）：購課 + 排行榜
+#### Day 7（2025-11-23）：Release 2 - 購課 + 排行榜
 
-**功能範疇**：
+**上午**：購課模組（4 小時）
 
-**購課模組（簡化版）**
-- [ ] 課程價格顯示
-- [ ] 「購買課程」按鈕（模擬金流，不串真實支付）
-- [ ] 購買後解鎖課程內容
-- [ ] 訂單記錄（簡單的購買歷程）
+- [ ] 課程價格顯示（修改課程列表與詳情頁）
+- [ ] 購買課程 API（POST /api/purchases，模擬金流）
+- [ ] 購買按鈕 UI（簡化版，點擊直接購買成功）
+- [ ] 購買後解鎖課程邏輯
+- [ ] 訂單記錄頁面（簡單列表）
 
-**排行榜模組**
-- [ ] 經驗值計算邏輯
-- [ ] 使用者等級系統
+**下午**：排行榜模組（4 小時）
+
+- [ ] 經驗值計算邏輯（交付單元累積）
+- [ ] 排行榜 API（GET /api/leaderboard）
 - [ ] 排行榜頁面（依經驗值排序）
-- [ ] 個人檔案頁（顯示經驗值、等級、已購課程）
+- [ ] 個人檔案頁（顯示經驗值、已購課程、已交付單元）
 
-**Day 7 晚上**：
+**晚上**：Release 2 準備與提交（3 小時）
 
-- [ ] 錄影 Demo Release 2
-- [ ] Discord 提交 Release 2
+- [ ] 購課流程 E2E 測試
+- [ ] 排行榜 E2E 測試
+- [ ] **錄影 Demo Release 2**
+- [ ] **Discord 提交 Release 2**
 
 ---
 
 #### 延後模組（Day 8+ 或 Optional）
 
 **作業與道館**（若時間充裕）
+
 - [ ] 道館列表
 - [ ] 道館詳情頁
 - [ ] 提交作業（文件上傳）
@@ -244,6 +299,7 @@
 #### ✅ 必須做（Release 1 & 2）
 
 **Release 1 核心**
+
 - 使用者註冊/登入（JWT）
 - 課程列表 + 課程詳情
 - 影片播放 + 觀看進度追蹤
@@ -251,6 +307,7 @@
 - E2E 測試（至少涵蓋核心流程）
 
 **Release 2 核心**
+
 - 購課流程（**簡化版金流**，用按鈕模擬，不串真實支付）
 - 購買後解鎖課程
 - 經驗值計算 + 等級系統
@@ -288,19 +345,27 @@
 
 **對策**：
 
-- 用 Spring Initializr 快速建立專案
+- ✅ 用 Spring Initializr 快速建立專案（已完成）
 - 讓 AI 寫 80% 的 CRUD
 - 只學最基礎的概念
 - 重點放在理解 Controller -> Service -> Repository 架構
+
+**實際狀況**：
+
+- Day 2 已完成專案建置，進度符合預期
 
 ### 風險 2：E2E 測試沒時間
 
 **對策**：
 
-- Day 2 就建立測試框架
+- ✅ Day 2 就建立測試框架（已完成）
 - 每開發一個功能就寫對應測試
 - 用 AI 生成測試腳本
 - 至少保證核心流程有測試覆蓋
+
+**實際狀況**：
+
+- Playwright 已初步建置，進度符合預期
 
 ### 風險 3：功能做不完
 
@@ -311,19 +376,44 @@
 - 寧可 4 個功能完整，不要 10 個功能半殘
 - 確保每個 Release 都是可 Demo 的狀態
 
+**實際應對**：
+
+- 新增 Release 0（非正式里程碑）提早與 PM 確認
+- 將 Release 1 目標從 Day 5 調整為 Day 6，更務實
+- 影片托管為技術風險，需於 Day 2 晚上確認方案
+
 ### 風險 4：Docker 環境問題
 
 **對策**：
 
-- 盡早測試 Docker Compose
+- ✅ 盡早測試 Docker Compose（已完成）
 - 準備本地開發和 Docker 兩套環境
 - 記錄所有環境設定步驟
+
+**實際狀況**：
+
+- Docker Compose 已建立並可正常運作
+
+### 風險 5：影片托管技術（新增）
+
+**識別原因**：
+
+- PM 明確要求「每 10 秒自動記錄觀看進度」
+- 需要能取得影片播放當前時間點
+- YouTube embed 是否支援此功能需驗證
+
+**對策**：
+
+- Day 2 晚上進行技術驗證
+- 若 YouTube embed 可行則採用（最簡化）
+- 若不可行需評估其他方案（如自建影片播放器）
+- 必要時向 PM 確認是否可調整技術實作方式
 
 ---
 
 ## 立即行動清單
 
-### ✅ Day 1 已完成
+### ✅ Day 1-2 已完成
 
 1. [x] 到 [world.waterballsa.tw](https://world.waterballsa.tw) 註冊帳號
 2. [x] 加入 Discord，到 #歡迎 頻道宣告
@@ -331,14 +421,35 @@
 4. [x] 用 Notion/Obsidian 建立功能清單
 5. [x] 到 #需求訪談 提出第一批問題（功能模組、實現順序）
 6. [x] 與 PM 確認溝通模式與功能優先級
+7. [x] 建立專案結構（Spring Boot + Next.js + Docker Compose）
+8. [x] 前後端空專案建立
+9. [x] E2E 測試環境初步建置（Playwright）
+10. [x] 與 PM 確認影片進度追蹤細節
+11. [x] 更新 Release 1 規格文件（v03）
 
-### ⏭️ Day 1 晚上 + Day 2 待辦
+### ⏭️ Day 2 晚上待辦（今天）
 
-7. [ ] 建立專案結構（Spring Boot + Next.js + Docker Compose）
-8. [ ] 提交第一次 Release：「專案架構規劃」
-9. [ ] 學習 Spring Boot 基礎（REST API、JPA）
-10. [ ] 學習 Next.js 基礎（App Router、Server Components）
-11. [ ] 建立 E2E 測試環境（Playwright）
+**關鍵里程碑準備**：
+
+- [ ] 完成資料庫 Schema 設計（User、Course、Chapter、Unit、VideoProgress、Submission）
+- [ ] 建立 API 文件草稿（Swagger/OpenAPI）
+- [ ] Spring Boot 基礎學習（REST API、JPA - 夠用即可）
+- [ ] Next.js 基礎學習（App Router、Server Components - 夠用即可）
+- [ ] 影片托管技術方案確認（YouTube embed 或其他）
+
+### ⏭️ Day 3-7 核心開發
+
+**Release 0**（非正式）：Day 4 晚上
+
+- 權限模組（註冊/登入/登出）+ E2E 測試
+
+**Release 1**（正式）：Day 6 晚上
+
+- 完整權限 + 看課模組（含影片進度追蹤、交付功能）
+
+**Release 2**（正式）：Day 7 晚上
+
+- 購課模組（簡化版金流）+ 排行榜
 
 ---
 
