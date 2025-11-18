@@ -1,0 +1,19 @@
+# logrotate規則
+
+# 指定要輪替的日誌文件路徑，這裡匹配 /var/log/nginx/ 目錄下所有以 .log 結尾的文件
+/var/log/nginx/*.log { 
+        su root root # 在執行輪替操作時，切換到 root 用戶和 root 組
+        daily # 每天輪替一次日誌
+        missingok # 如果日誌文件丟失，不報錯繼續執行
+        rotate 365 # 保留最近 365 個輪替後的日誌文件，舊的將被刪除
+        compress # 輪替後的日誌文件將被壓縮
+        dateext # 輪替後的日誌文件將以日期作為擴展名（例如：nginx.log-20230101.gz）
+        notifempty # 如果日誌文件為空，則不進行輪替
+        create # 輪替後創建一個新的空日誌文件
+        sharedscripts # 確保 postrotate 和 prerotate 腳本只執行一次，即使有多個日誌文件匹配
+        postrotate # 在日誌文件輪替後執行的腳本
+                if [ -f /var/run/nginx.pid ]; then # 檢查 Nginx 的 PID 文件是否存在
+                        kill -USR1 `cat /var/run/nginx.pid` # 如果存在，向 Nginx 進程發送 USR1 信號，使其重新打開日誌文件
+                fi
+        endscript # postrotate 腳本結束標誌
+}
