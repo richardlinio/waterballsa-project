@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: WaterBall SA Backend API
+  description: |
+    Backend API for WaterBall SA Platform
+
+    This API provides endpoints for the WaterBall SA learning platform, including health checks,
+    course management, and user interactions.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@waterballsa.tw
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://api.waterballsa.tw
+    description: Production server
+
+tags:
+  - name: Health Check
+    description: API health monitoring endpoints
+
+paths:
+  /healthz:
+    get:
+      tags:
+        - Health Check
+      summary: Health check endpoint
+      description: |
+        Returns the health status of the application and its dependencies.
+
+        This endpoint checks:
+        - Application status (always UP if running)
+        - Database connection status (PostgreSQL)
+
+        Returns HTTP 200 when all components are healthy, HTTP 503 when any component is down.
+      operationId: checkHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: All components healthy
+                  value:
+                    status: UP
+                    components:
+                      application:
+                        status: UP
+                      database:
+                        status: UP
+                        details:
+                          database: PostgreSQL
+                          validConnection: true
+        '503':
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                unhealthy:
+                  summary: Database connection failed
+                  value:
+                    status: DOWN
+                    components:
+                      application:
+                        status: UP
+                      database:
+                        status: DOWN
+                        details:
+                          database: PostgreSQL
+                          validConnection: false
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - components
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+          description: Overall health status of the service
+        components:
+          type: object
+          description: Health status of individual components
+          required:
+            - application
+            - database
+          properties:
+            application:
+              $ref: '#/components/schemas/ComponentHealth'
+            database:
+              $ref: '#/components/schemas/DatabaseHealth'
+
+    ComponentHealth:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+          description: Component health status
+
+    DatabaseHealth:
+      type: object
+      required:
+        - status
+        - details
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+          description: Database health status
+        details:
+          type: object
+          required:
+            - database
+            - validConnection
+          properties:
+            database:
+              type: string
+              example: PostgreSQL
+              description: Database type
+            validConnection:
+              type: boolean
+              description: Whether the database connection is valid
