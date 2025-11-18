@@ -28,13 +28,9 @@ paths:
         - Health Check
       summary: Health check endpoint
       description: |
-        Returns the health status of the application and its dependencies.
+        Returns the database connection health status.
 
-        This endpoint checks:
-        - Application status (always UP if running)
-        - Database connection status (PostgreSQL)
-
-        Returns HTTP 200 when all components are healthy, HTTP 503 when any component is down.
+        Returns HTTP 200 when database is healthy, HTTP 503 when database is down.
       operationId: checkHealth
       responses:
         '200':
