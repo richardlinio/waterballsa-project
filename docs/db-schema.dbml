@@ -31,6 +31,24 @@ Table users {
   note: '使用者帳號表'
 }
 
+Table invalid_tokens {
+  id bigserial [primary key]
+  token_jti varchar(255) [not null, unique, note: 'JWT Token ID (jti claim)']
+  user_id bigint [not null, ref: > users.id, note: '關聯的使用者 ID']
+  expires_at timestamp [not null, note: 'Token 過期時間']
+  invalidated_at timestamp [not null, default: `now()`, note: 'Token 失效時間（登出時間）']
+  reason varchar(100) [note: '失效原因：USER_LOGOUT, ADMIN_REVOKE, PASSWORD_CHANGED 等']
+  created_at timestamp [not null, default: `now()`]
+
+  indexes {
+    token_jti [unique, name: 'idx_invalid_tokens_jti']
+    user_id [name: 'idx_invalid_tokens_user_id']
+    expires_at [name: 'idx_invalid_tokens_expires', note: '用於清理已過期的 token']
+  }
+
+  note: 'JWT Token 黑名單表，儲存已登出或撤銷的 token'
+}
+
 // ============================================================
 // 2. 看課模組 (Course Module)
 // ============================================================
