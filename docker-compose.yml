@@ -38,12 +38,17 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
-      # Mount source code for hot reload development
-      - ./www_root/waterballsa-frontend:/app
-      # Anonymous volume to prevent host node_modules from overwriting container's
-      # This ensures dependencies are compiled for the container's Linux environment
-      # Reference: https://note.wedsatcoming.com/docs/learn-note/為什麼在Docker中使用匿名volume處理node_modules是個好方法？
-      - /app/node_modules
+      # Mount only source directories for hot reload development
+      # Explicitly exclude node_modules to use container's Linux-compiled dependencies
+      - ./www_root/waterballsa-frontend/src:/app/src
+      - ./www_root/waterballsa-frontend/public:/app/public
+      - ./www_root/waterballsa-frontend/next.config.ts:/app/next.config.ts
+      - ./www_root/waterballsa-frontend/tsconfig.json:/app/tsconfig.json
+      - ./www_root/waterballsa-frontend/tailwind.config.ts:/app/tailwind.config.ts
+      - ./www_root/waterballsa-frontend/postcss.config.mjs:/app/postcss.config.mjs
+      - ./www_root/waterballsa-frontend/components.json:/app/components.json
+      # Keep node_modules inside container (Linux-compiled)
+      # No mount = uses container's version built during docker build
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
       interval: 30s
