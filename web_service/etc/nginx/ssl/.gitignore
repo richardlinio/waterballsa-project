@@ -1,2 +1,7 @@
-*
+# Ignore SSL certificates and keys
+*.crt
+*.key
+*.pem
+
+# But keep this directory in git
 !.gitignore
