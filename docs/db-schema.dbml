@@ -1,0 +1,157 @@
+// Database Schema for WaterballSA Platform - Release 1
+// Generated: 2025-11-19
+// Based on: Release-1-Spec.md
+
+// ============================================================
+// 1. 權限模組 (Authentication Module)
+// ============================================================
+
+Enum user_role {
+  STUDENT [note: '學生']
+  TEACHER [note: '老師']
+  ADMIN [note: '管理員']
+}
+
+Table users {
+  id bigserial [primary key]
+  username varchar(50) [not null, unique, note: '帳號：英數字，有長度上限']
+  password_hash varchar(72) [not null, note: '密碼雜湊值']
+  role user_role [not null, default: 'STUDENT', note: '使用者角色']
+  experience_points integer [not null, default: 0, note: '經驗值，起始為0']
+  level integer [not null, default: 1, note: '等級，起始為1']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: '軟刪除時間戳']
+
+  indexes {
+    username [unique]
+    experience_points [name: 'idx_users_experience', note: '用於排行榜查詢']
+  }
+
+  note: '使用者帳號表'
+}
+
+Table access_tokens {
+  id bigserial [primary key]
+  token_jti varchar(64) [not null, unique, note: 'JWT Token ID (jti claim)']
+  user_id bigint [not null, ref: > users.id, note: '關聯的使用者 ID']
+  expires_at timestamp [not null, note: 'Token 過期時間']
+  invalidated_at timestamp [not null, default: `now()`, note: 'Token 失效時間（登出時間）']
+  created_at timestamp [not null, default: `now()`]
+
+  indexes {
+    token_jti [unique, name: 'idx_invalid_tokens_jti']
+    user_id [name: 'idx_invalid_tokens_user_id']
+    expires_at [name: 'idx_invalid_tokens_expires', note: '用於清理已過期的 token']
+  }
+
+  note: 'JWT Token 黑名單表，儲存已登出或撤銷的 token'
+}
+
+// ============================================================
+// 2. 看課模組 (Course Module)
+// ============================================================
+
+Table courses {
+  id bigserial [primary key]
+  title varchar(200) [not null, note: '課程標題']
+  description text [note: '課程描述']
+  cover_image_url varchar(500) [note: '封面圖 URL']
+  price decimal(10,2) [not null, default: 0, note: '課程價格']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: '軟刪除時間戳']
+
+  indexes {
+    title [name: 'idx_courses_title']
+  }
+
+  note: '課程表'
+}
+
+Table chapters {
+  id bigserial [primary key]
+  course_id bigint [not null, ref: > courses.id]
+  title varchar(255) [not null, note: '章節標題']
+  order_index integer [not null, note: '章節順序']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: '軟刪除時間戳']
+
+  indexes {
+    (course_id, order_index) [unique, name: 'idx_chapters_course_order']
+  }
+
+  note: '課程章節表'
+}
+
+Table units {
+  id bigserial [primary key]
+  chapter_id bigint [not null, ref: > chapters.id]
+  title varchar(255) [not null, note: '單元標題']
+  video_url varchar(500) [not null, note: '影片 URL']
+  duration_seconds integer [not null, note: '影片長度（秒）']
+  experience_reward integer [not null, default: 100, note: '交付後獲得的經驗值（MVP 固定 100）']
+  is_free_preview boolean [not null, default: false, note: '是否為免費試看單元']
+  order_index integer [not null, note: '單元順序']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: '軟刪除時間戳']
+
+  indexes {
+    (chapter_id, order_index) [unique, name: 'idx_units_chapter_order']
+  }
+
+  note: '課程單元（影片）表'
+}
+
+Table user_unit_progress {
+  id bigserial [primary key]
+  user_id bigint [not null, ref: > users.id]
+  unit_id bigint [not null, ref: > units.id]
+  watch_position_seconds integer [not null, default: 0, note: '觀看位置（秒），用於續播']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: '軟刪除時間戳']
+
+  indexes {
+    (user_id, unit_id) [unique, name: 'idx_progress_user_unit']
+    user_id [name: 'idx_progress_user_id']
+    unit_id [name: 'idx_progress_unit_id']
+  }
+
+  note: '使用者單元觀看進度表，系統每 10 秒記錄一次'
+}
+
+Table user_unit_submissions {
+  id bigserial [primary key]
+  user_id bigint [not null, ref: > users.id]
+  unit_id bigint [not null, ref: > units.id]
+  submitted_at timestamp [not null, default: `now()`, note: '交付時間']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: '軟刪除時間戳']
+
+  indexes {
+    (user_id, unit_id) [unique, name: 'idx_submissions_user_unit']
+    user_id [name: 'idx_submissions_user_id']
+    submitted_at [name: 'idx_submissions_time']
+  }
+
+  note: '使用者單元交付表，每個單元只能交付一次'
+}
+
+// ============================================================
+// Relationships Summary
+// ============================================================
+
+// Course Structure:
+// courses (1) ---> (*) chapters ---> (*) units
+
+// User Authentication:
+// users (1) ---> (*) user_sessions
+
+// User Progress:
+// users (1) ---> (*) user_unit_progress (*) <--- (1) units
+// users (1) ---> (*) user_unit_submissions (*) <--- (1) units
+
