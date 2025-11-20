@@ -102,7 +102,7 @@ paths:
                   summary: Registration successful
                   value:
                     message: 'Registration successful'
-                    userId: '123e4567-e89b-12d3-a456-426614174000'
+                    userId: 1
         '400':
           description: Invalid request data or rate limit exceeded
           content:
@@ -171,7 +171,7 @@ paths:
                   value:
                     accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
                     user:
-                      id: '123e4567-e89b-12d3-a456-426614174000'
+                      id: 1
                       username: 'john_doe123'
                       experience: 0
         '401':
@@ -305,10 +305,9 @@ components:
           description: Success message
           example: 'Registration successful'
         userId:
-          type: string
-          format: uuid
+          type: integer
           description: Newly created user ID
-          example: '123e4567-e89b-12d3-a456-426614174000'
+          example: 1
 
     LoginRequest:
       type: object
@@ -346,10 +345,9 @@ components:
         - experience
       properties:
         id:
-          type: string
-          format: uuid
+          type: integer
           description: User ID
-          example: '123e4567-e89b-12d3-a456-426614174000'
+          example: 1
         username:
           type: string
           description: Username
