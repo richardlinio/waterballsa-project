@@ -125,3 +125,19 @@ MissionSummary:
       type: integer
       description: Mission order index within the chapter
       example: 1
+    status:
+      type: string
+      enum:
+        - UNCOMPLETED
+        - COMPLETED
+        - DELIVERED
+      description: |
+        Mission completion status for the authenticated user.
+        - UNCOMPLETED: Mission in progress or not started
+        - COMPLETED: Mission completed but not delivered yet
+        - DELIVERED: Mission delivered and rewards received
+
+        Note: This field is only included when the request is authenticated.
+        For unauthenticated requests, this field will be null or omitted.
+      example: 'UNCOMPLETED'
+      nullable: true

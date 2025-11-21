@@ -25,7 +25,9 @@ tags:
   - name: Journeys
     description: Learning journey management endpoints
   - name: Missions
-    description: Learning mission (video/article) management endpoints
+    description: Learning mission (video/article/questionnaire) management endpoints
+  - name: Progress
+    description: User mission progress tracking endpoints
   - name: Users
     description: User profile and information endpoints
 
@@ -51,8 +53,11 @@ paths:
   /journeys/{journeyId}/missions/{missionId}:
     $ref: './openapi/paths/missions.yaml#/detail'
 
-  /journeys/{journeyId}/missions/{missionId}/submit:
-    $ref: './openapi/paths/missions.yaml#/submit'
+  /journeys/{journeyId}/missions/{missionId}/deliver:
+    $ref: './openapi/paths/missions.yaml#/deliver'
+
+  /users/{userId}/missions/{missionId}/progress:
+    $ref: './openapi/paths/progress.yaml#/detail'
 
   /users/me:
     $ref: './openapi/paths/users.yaml#/me'
@@ -113,12 +118,18 @@ components:
     # Mission schemas
     MissionDetail:
       $ref: './openapi/schemas/missions.yaml#/MissionDetail'
+    MissionReward:
+      $ref: './openapi/schemas/missions.yaml#/MissionReward'
+    MissionContent:
+      $ref: './openapi/schemas/missions.yaml#/MissionContent'
     UpdateProgressRequest:
       $ref: './openapi/schemas/missions.yaml#/UpdateProgressRequest'
     ProgressUpdateResponse:
       $ref: './openapi/schemas/missions.yaml#/ProgressUpdateResponse'
-    SubmitResponse:
-      $ref: './openapi/schemas/missions.yaml#/SubmitResponse'
+    DeliverResponse:
+      $ref: './openapi/schemas/missions.yaml#/DeliverResponse'
+    UserMissionProgress:
+      $ref: './openapi/schemas/missions.yaml#/UserMissionProgress'
 
     # User schemas
     UserProfile:

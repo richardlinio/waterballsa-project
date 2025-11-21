@@ -2,16 +2,27 @@ MissionDetail:
   type: object
   required:
     - id
+    - chapterId
+    - journeyId
     - type
     - title
-    - experienceReward
+    - description
     - isFreePreview
-    - isCompleted
-    - isSubmitted
+    - createdAt
+    - reward
+    - content
   properties:
     id:
       type: integer
       description: Mission ID
+      example: 1
+    chapterId:
+      type: integer
+      description: Chapter ID this mission belongs to
+      example: 8
+    journeyId:
+      type: integer
+      description: Journey ID (derived from chapter)
       example: 1
     type:
       type: string
@@ -24,79 +35,107 @@ MissionDetail:
     title:
       type: string
       description: Mission title
-      example: '這門課手把手帶你成為架構設計的高手'
-    videoUrl:
+      example: '課程介紹：這門課手把手帶你成為架構設計的高手'
+    description:
       type: string
-      format: uri
-      description: Video URL (YouTube embed, only for VIDEO type)
-      example: 'https://www.youtube.com/embed/abc123'
-    durationSeconds:
-      type: integer
-      description: Video duration in seconds (only for VIDEO type)
-      example: 300
-    articleContent:
-      type: string
-      description: Article content in HTML format (only for ARTICLE type)
-      example: '<h1>Introduction</h1><p>Article content...</p>'
-    experienceReward:
-      type: integer
-      description: Experience points rewarded upon submission
-      example: 100
+      description: Detailed description of the mission
+      example: '思維升級：Christopher Alexander 模式六大要素及模式語言'
     isFreePreview:
       type: boolean
       description: Whether this mission is free to preview
       example: true
-    watchPositionSeconds:
+    createdAt:
       type: integer
-      description: Current watch position in seconds (only for VIDEO type)
-      example: 150
-    isArticleCompleted:
-      type: boolean
-      description: Whether article has been read to the end (only for ARTICLE type)
-      example: false
-    isCompleted:
-      type: boolean
-      description: |
-        Whether this mission is completed.
-        For VIDEO: true when watchPositionSeconds == durationSeconds
-        For ARTICLE: true when isArticleCompleted == true
-      example: false
-    isSubmitted:
-      type: boolean
-      description: Whether this mission has been submitted for experience points
-      example: false
+      format: int64
+      description: Creation timestamp in milliseconds
+      example: 1733294001561
+    videoLength:
+      type: string
+      description: Video duration in MM:SS format (VIDEO type only, derived from content)
+      example: '04:16'
+    reward:
+      $ref: '#/MissionReward'
+    content:
+      type: array
+      description: Mission content array (can have multiple items)
+      items:
+        $ref: '#/MissionContent'
+
+MissionReward:
+  type: object
+  required:
+    - exp
+  properties:
+    exp:
+      type: integer
+      description: Experience points reward
+      example: 100
+
+MissionContent:
+  type: object
+  required:
+    - type
+    - url
+    - id
+  properties:
+    id:
+      type: integer
+      description: Content item ID
+      example: 0
+    type:
+      type: string
+      enum:
+        - video
+        - article
+        - form
+      description: Content type (lowercase)
+      example: 'video'
+    url:
+      type: string
+      format: uri
+      description: Content URL
+      example: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
+    durationSeconds:
+      type: integer
+      description: Video duration in seconds (VIDEO type only)
+      example: 256
 
 UpdateProgressRequest:
   type: object
+  required:
+    - watchPositionSeconds
   properties:
     watchPositionSeconds:
       type: integer
       description: Current watch position in seconds (for VIDEO missions)
       example: 150
-    isArticleCompleted:
-      type: boolean
-      description: Mark article as completed (for ARTICLE missions)
-      example: true
+      minimum: 0
 
 ProgressUpdateResponse:
   type: object
   required:
-    - isCompleted
+    - missionId
+    - status
+    - watchPositionSeconds
   properties:
+    missionId:
+      type: integer
+      description: Mission ID
+      example: 1
     watchPositionSeconds:
       type: integer
       description: Updated watch position (for VIDEO missions)
       example: 150
-    isArticleCompleted:
-      type: boolean
-      description: Article completion status (for ARTICLE missions)
-      example: true
-    isCompleted:
-      type: boolean
-      description: Whether the mission is now completed
-      example: false
+    status:
+      type: string
+      enum:
+        - UNCOMPLETED
+        - COMPLETED
+        - DELIVERED
+      description: Current mission status after update
+      example: UNCOMPLETED
 
-SubmitResponse:
+DeliverResponse:
   type: object
   required:
     - message
@@ -107,16 +146,40 @@ SubmitResponse:
     message:
       type: string
       description: Success message
-      example: 'Mission submitted successfully'
+      example: 'Mission delivered successfully'
     experienceGained:
       type: integer
-      description: Experience points gained from this submission
+      description: Experience points gained from this delivery
       example: 100
     totalExperience:
       type: integer
-      description: User's total experience points after submission
+      description: User's total experience points after delivery
       example: 1500
     currentLevel:
       type: integer
-      description: User's current level after submission
+      description: User's current level after delivery
       example: 4
+
+UserMissionProgress:
+  type: object
+  required:
+    - missionId
+    - status
+    - watchPositionSeconds
+  properties:
+    missionId:
+      type: integer
+      description: Mission ID
+      example: 1
+    status:
+      type: string
+      enum:
+        - UNCOMPLETED
+        - COMPLETED
+        - DELIVERED
+      description: Mission status
+      example: COMPLETED
+    watchPositionSeconds:
+      type: integer
+      description: Current watch position in seconds (for VIDEO missions)
+      example: 256

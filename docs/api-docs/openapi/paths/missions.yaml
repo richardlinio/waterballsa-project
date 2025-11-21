@@ -4,28 +4,24 @@ detail:
       - Missions
     summary: Get mission details
     description: |
-      Returns detailed information about a specific mission (video, article, or questionnaire) including content and user progress.
+      Returns detailed information about a specific mission including content and rewards.
+
+      **Note:** This endpoint does NOT include user progress. Use GET /users/{userId}/missions/{missionId}/progress for progress information.
 
       **Authentication:**
       - Requires valid JWT token
 
-      **Mission Types:**
-      - VIDEO: Returns videoUrl, durationSeconds, and watchPositionSeconds
-      - ARTICLE: Returns articleContent and isArticleCompleted
-      - QUESTIONNAIRE: Returns questionnaire content and completion status
-
       **Response Includes:**
-      - Mission basic information (type, title, experience reward)
-      - Content (video URL or article content depending on type)
-      - User's progress (watch position for video, completion flag for article)
-      - Completion status (calculated from progress)
-      - Submission status (whether user has submitted this mission)
+      - Mission basic information (id, chapterId, journeyId, type, title, description)
+      - Content array (can have multiple content items like videos, articles, forms)
+      - Reward information (experience points)
+      - Free preview flag
+      - Creation timestamp
 
-      **Completion Status:**
-      - For VIDEO: isCompleted is true when watchPositionSeconds == durationSeconds
-      - For ARTICLE: isCompleted is true when isArticleCompleted == true
-      - For QUESTIONNAIRE: isCompleted is true when isArticleCompleted == true
-      - isSubmitted: true when user has submitted this mission for experience points
+      **Content Structure:**
+      - Each mission can have multiple content items
+      - Content types: video, article, form
+      - Videos include durationSeconds field
 
       **Free Preview:**
       - All users can access missions with isFreePreview: true
@@ -56,81 +52,59 @@ detail:
             schema:
               $ref: '../schemas/missions.yaml#/MissionDetail'
             examples:
-              videoNotStarted:
-                summary: Video mission not started yet
+              videoMission:
+                summary: Video mission example
                 value:
                   id: 1
+                  chapterId: 8
+                  journeyId: 1
                   type: 'VIDEO'
-                  title: '這門課手把手帶你成為架構設計的高手'
-                  videoUrl: 'https://www.youtube.com/embed/abc123'
-                  durationSeconds: 300
-                  experienceReward: 100
+                  title: '課程介紹：這門課手把手帶你成為架構設計的高手'
+                  description: '思維升級：Christopher Alexander 模式六大要素及模式語言'
                   isFreePreview: true
-                  watchPositionSeconds: 0
-                  isCompleted: false
-                  isSubmitted: false
-              videoInProgress:
-                summary: Video mission in progress
-                value:
-                  id: 2
-                  type: 'VIDEO'
-                  title: '你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code'
-                  videoUrl: 'https://www.youtube.com/embed/def456'
-                  durationSeconds: 450
-                  experienceReward: 100
-                  isFreePreview: true
-                  watchPositionSeconds: 225
-                  isCompleted: false
-                  isSubmitted: false
-              videoCompleted:
-                summary: Video mission completed but not submitted
-                value:
-                  id: 3
-                  type: 'VIDEO'
-                  title: '架構師該如何思考'
-                  videoUrl: 'https://www.youtube.com/embed/ghi789'
-                  durationSeconds: 600
-                  experienceReward: 100
-                  isFreePreview: false
-                  watchPositionSeconds: 600
-                  isCompleted: true
-                  isSubmitted: false
-              articleNotCompleted:
-                summary: Article mission not completed yet
+                  createdAt: 1733294001561
+                  videoLength: '04:16'
+                  reward:
+                    exp: 100
+                  content:
+                    - id: 0
+                      type: 'video'
+                      url: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
+                      durationSeconds: 256
+              articleMission:
+                summary: Article mission example
                 value:
                   id: 5
+                  chapterId: 10
+                  journeyId: 1
                   type: 'ARTICLE'
                   title: 'UML 不是英文縮寫字'
-                  articleContent: '<h1>UML 介紹</h1><p>文章內容...</p>'
-                  experienceReward: 100
+                  description: 'UML 統一塑模語言完整介紹'
                   isFreePreview: false
-                  isArticleCompleted: false
-                  isCompleted: false
-                  isSubmitted: false
-              articleCompletedAndSubmitted:
-                summary: Article mission completed and submitted
-                value:
-                  id: 6
-                  type: 'ARTICLE'
-                  title: '設計模式概論'
-                  articleContent: '<h1>設計模式</h1><p>完整文章內容...</p>'
-                  experienceReward: 100
-                  isFreePreview: false
-                  isArticleCompleted: true
-                  isCompleted: true
-                  isSubmitted: true
-              questionnaireNotCompleted:
-                summary: Questionnaire mission not completed yet
+                  createdAt: 1733294001561
+                  reward:
+                    exp: 100
+                  content:
+                    - id: 0
+                      type: 'article'
+                      url: 'https://cdn.waterballsa.tw/articles/uml-intro.html'
+              questionnaireMission:
+                summary: Questionnaire mission example
                 value:
                   id: 7
+                  chapterId: 12
+                  journeyId: 1
                   type: 'QUESTIONNAIRE'
                   title: '課程回饋問卷'
-                  articleContent: '<h1>課程回饋問卷</h1><p>問卷內容...</p>'
-                  experienceReward: 100
+                  description: '請填寫課程回饋問卷，幫助我們改進課程內容'
                   isFreePreview: false
-                  isArticleCompleted: false
-                  isCompleted: false
-                  isSubmitted: false
+                  createdAt: 1733294001561
+                  reward:
+                    exp: 50
+                  content:
+                    - id: 0
+                      type: 'form'
+                      url: 'https://forms.waterballsa.tw/feedback-form-1'
       '401':
         description: Unauthorized - invalid or missing token
         content:
@@ -154,157 +128,27 @@ detail:
                 value:
                   error: 'Mission not found'
 
-  put:
-    tags:
-      - Missions
-    summary: Update mission progress
-    description: |
-      Updates the user's progress for a specific mission (video, article, or questionnaire).
-
-      **Authentication:**
-      - Requires valid JWT token
-
-      **Progress Tracking:**
-      - For VIDEO missions:
-        - Frontend calls this API every 10 seconds during video playback
-        - Send watchPositionSeconds to update progress
-        - Backend automatically checks if watchPositionSeconds == durationSeconds
-        - When equal, mission status becomes "completed" but NOT "submitted"
-        - Progress can be updated multiple times (for rewatching)
-
-      - For ARTICLE missions:
-        - Frontend calls this API when user scrolls to bottom of article
-        - Send isArticleCompleted: true to mark as completed
-        - Once marked completed, mission status becomes "completed" but NOT "submitted"
-
-      - For QUESTIONNAIRE missions:
-        - Frontend calls this API when user completes the questionnaire
-        - Send isArticleCompleted: true to mark as completed
-        - Once marked completed, mission status becomes "completed" but NOT "submitted"
-
-      **Completion Detection:**
-      - For VIDEO: Backend compares watchPositionSeconds with mission's durationSeconds
-      - For ARTICLE: Backend checks isArticleCompleted flag
-      - For QUESTIONNAIRE: Backend checks isArticleCompleted flag
-      - User must manually submit (via POST endpoint) to get experience points
-
-      **Note:**
-      - This endpoint does NOT grant experience points
-      - Experience points are only granted via submission endpoint
-    operationId: updateMissionProgress
-    security:
-      - bearerAuth: []
-    parameters:
-      - name: journeyId
-        in: path
-        required: true
-        description: Journey ID
-        schema:
-          type: integer
-          example: 1
-      - name: missionId
-        in: path
-        required: true
-        description: Mission ID
-        schema:
-          type: integer
-          example: 1
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '../schemas/missions.yaml#/UpdateProgressRequest'
-          examples:
-            videoInProgress:
-              summary: Update video progress to 150 seconds
-              value:
-                watchPositionSeconds: 150
-            videoCompleted:
-              summary: Update video progress to completion (300 seconds)
-              value:
-                watchPositionSeconds: 300
-            articleCompleted:
-              summary: Mark article as completed
-              value:
-                isArticleCompleted: true
-    responses:
-      '200':
-        description: Progress updated successfully
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/missions.yaml#/ProgressUpdateResponse'
-            examples:
-              videoInProgress:
-                summary: Video progress updated (not completed)
-                value:
-                  watchPositionSeconds: 150
-                  isCompleted: false
-              videoCompleted:
-                summary: Video progress updated (now completed)
-                value:
-                  watchPositionSeconds: 300
-                  isCompleted: true
-              articleCompleted:
-                summary: Article marked as completed
-                value:
-                  isArticleCompleted: true
-                  isCompleted: true
-      '400':
-        description: Invalid request data
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/common.yaml#/ErrorResponse'
-            examples:
-              invalidProgress:
-                summary: Invalid watch position
-                value:
-                  error: 'Invalid watch position: must be between 0 and video duration'
-      '401':
-        description: Unauthorized - invalid or missing token
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/common.yaml#/ErrorResponse'
-            examples:
-              unauthorized:
-                summary: Invalid or missing token
-                value:
-                  error: 'Unauthorized or invalid token'
-      '404':
-        description: Mission not found
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/common.yaml#/ErrorResponse'
-            examples:
-              notFound:
-                summary: Mission does not exist
-                value:
-                  error: 'Mission not found'
-
-submit:
+deliver:
   post:
     tags:
       - Missions
-    summary: Submit mission for experience points
+    summary: Deliver mission for experience points
     description: |
-      Submit a completed mission to receive experience points.
+      Deliver a completed mission to receive experience points and change status to DELIVERED.
 
       **Authentication:**
       - Requires valid JWT token
 
       **Requirements:**
-      - Mission must be 100% completed (watchPositionSeconds == durationSeconds)
-      - Cannot submit if not completed
-      - Each mission can only be submitted once
+      - For VIDEO missions: Must have status COMPLETED (watched to the end)
+      - For ARTICLE/QUESTIONNAIRE missions: Can be delivered directly (no progress tracking)
+      - Cannot deliver if mission status is already DELIVERED
+      - Each mission can only be delivered once
 
       **Effects:**
-      - Adds experience points to user (amount defined in mission)
+      - Changes mission status from COMPLETED (or UNCOMPLETED for non-video) to DELIVERED
+      - Adds experience points to user (amount defined in mission rewards)
       - Updates user level based on new experience points
-      - Records submission timestamp in database
 
       **Level Calculation:**
       - Level 1: 0-199 XP
@@ -318,8 +162,8 @@ submit:
 
       **Note:**
       - Experience points are only granted once per mission
-      - Duplicate submissions return 409 Conflict
-    operationId: submitMission
+      - Duplicate deliveries return 409 Conflict
+    operationId: deliverMission
     security:
       - bearerAuth: []
     parameters:
@@ -339,37 +183,37 @@ submit:
           example: 1
     responses:
       '200':
-        description: Mission submitted successfully
+        description: Mission delivered successfully
         content:
           application/json:
             schema:
-              $ref: '../schemas/missions.yaml#/SubmitResponse'
+              $ref: '../schemas/missions.yaml#/DeliverResponse'
             examples:
               success:
-                summary: Successfully submitted and gained experience
+                summary: Successfully delivered and gained experience
                 value:
-                  message: 'Mission submitted successfully'
+                  message: 'Mission delivered successfully'
                   experienceGained: 100
                   totalExperience: 1500
                   currentLevel: 4
               levelUp:
-                summary: Submitted and leveled up
+                summary: Delivered and leveled up
                 value:
-                  message: 'Mission submitted successfully'
+                  message: 'Mission delivered successfully'
                   experienceGained: 100
                   totalExperience: 3000
                   currentLevel: 5
       '400':
-        description: Mission not completed yet
+        description: Mission not completed or invalid state
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
-              notCompleted:
-                summary: Cannot submit incomplete mission
+              videoNotCompleted:
+                summary: Cannot deliver incomplete video mission
                 value:
-                  error: 'Mission must be 100% completed before submission'
+                  error: 'Video mission must be COMPLETED before delivery'
       '401':
         description: Unauthorized - invalid or missing token
         content:
@@ -393,13 +237,13 @@ submit:
                 value:
                   error: 'Mission not found'
       '409':
-        description: Mission already submitted
+        description: Mission already delivered
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               duplicate:
-                summary: Cannot submit twice
+                summary: Cannot deliver twice
                 value:
-                  error: 'Mission has already been submitted'
+                  error: 'Mission has already been delivered'

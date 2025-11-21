@@ -1,0 +1,333 @@
+detail:
+  get:
+    tags:
+      - Progress
+    summary: Get user's mission progress
+    description: |
+      Returns the user's progress for a specific mission.
+
+      **Authentication:**
+      - Requires valid JWT token
+
+      **Response Includes:**
+      - Mission ID
+      - Current status (UNCOMPLETED, COMPLETED, DELIVERED)
+      - Watch position in seconds (for VIDEO missions)
+
+      **Status Meanings:**
+      - UNCOMPLETED: Mission in progress or not started
+      - COMPLETED: Mission completed but not delivered yet
+      - DELIVERED: Mission delivered and rewards received
+
+      **Note:**
+      - For missions without progress record, returns default UNCOMPLETED status with watchPositionSeconds: 0
+    operationId: getUserMissionProgress
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          example: 1
+      - name: missionId
+        in: path
+        required: true
+        description: Mission ID
+        schema:
+          type: integer
+          example: 1
+    responses:
+      '200':
+        description: Successfully retrieved mission progress
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/missions.yaml#/UserMissionProgress'
+            examples:
+              videoNotStarted:
+                summary: Video mission not started
+                value:
+                  missionId: 1
+                  status: 'UNCOMPLETED'
+                  watchPositionSeconds: 0
+              videoInProgress:
+                summary: Video mission in progress
+                value:
+                  missionId: 1
+                  status: 'UNCOMPLETED'
+                  watchPositionSeconds: 150
+              videoCompleted:
+                summary: Video mission completed but not delivered
+                value:
+                  missionId: 1
+                  status: 'COMPLETED'
+                  watchPositionSeconds: 256
+              missionDelivered:
+                summary: Mission delivered
+                value:
+                  missionId: 1
+                  status: 'DELIVERED'
+                  watchPositionSeconds: 256
+      '401':
+        description: Unauthorized - invalid or missing token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              unauthorized:
+                summary: Invalid or missing token
+                value:
+                  error: 'Unauthorized or invalid token'
+      '403':
+        description: Forbidden - cannot access other user's progress
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              forbidden:
+                summary: Cannot access other user's progress
+                value:
+                  error: 'Cannot access progress for other users'
+      '404':
+        description: Mission not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              notFound:
+                summary: Mission does not exist
+                value:
+                  error: 'Mission not found'
+
+  put:
+    tags:
+      - Progress
+    summary: Update user's mission progress
+    description: |
+      Updates the user's progress for a specific mission (upsert operation - creates if not exists).
+
+      **Authentication:**
+      - Requires valid JWT token
+      - User can only update their own progress
+
+      **Progress Tracking:**
+      - For VIDEO missions:
+        - Frontend calls this API every 10 seconds during video playback
+        - Send watchPositionSeconds to update progress
+        - Backend automatically checks if watchPositionSeconds == durationSeconds
+        - When equal, mission status becomes "COMPLETED" but NOT "DELIVERED"
+        - Progress can be updated multiple times (for rewatching)
+
+      - For ARTICLE and QUESTIONNAIRE missions:
+        - No progress tracking needed
+        - User directly delivers the mission to mark as completed
+
+      **Status Transitions:**
+      - UNCOMPLETED → COMPLETED: When video reaches end (watchPositionSeconds == durationSeconds)
+      - User must manually deliver (via deliver endpoint) to get experience points and change to DELIVERED status
+
+      **Upsert Behavior:**
+      - If progress record doesn't exist, creates new record with provided watchPositionSeconds
+      - If progress record exists, updates the watchPositionSeconds
+
+      **Note:**
+      - This endpoint does NOT grant experience points
+      - Experience points are only granted via deliver endpoint
+    operationId: updateUserMissionProgress
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          example: 1
+      - name: missionId
+        in: path
+        required: true
+        description: Mission ID
+        schema:
+          type: integer
+          example: 1
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/missions.yaml#/UpdateProgressRequest'
+          examples:
+            videoInProgress:
+              summary: Update video progress to 150 seconds
+              value:
+                watchPositionSeconds: 150
+            videoCompleted:
+              summary: Update video progress to completion (256 seconds)
+              value:
+                watchPositionSeconds: 256
+    responses:
+      '200':
+        description: Progress updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/missions.yaml#/ProgressUpdateResponse'
+            examples:
+              videoInProgress:
+                summary: 'Video progress updated (status: UNCOMPLETED)'
+                value:
+                  missionId: 1
+                  watchPositionSeconds: 150
+                  status: 'UNCOMPLETED'
+              videoCompleted:
+                summary: 'Video progress updated (status: COMPLETED)'
+                value:
+                  missionId: 1
+                  watchPositionSeconds: 256
+                  status: 'COMPLETED'
+      '400':
+        description: Invalid request data
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              invalidProgress:
+                summary: Invalid watch position
+                value:
+                  error: 'Invalid watch position: must be between 0 and video duration'
+      '401':
+        description: Unauthorized - invalid or missing token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              unauthorized:
+                summary: Invalid or missing token
+                value:
+                  error: 'Unauthorized or invalid token'
+      '403':
+        description: Forbidden - cannot update other user's progress
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              forbidden:
+                summary: Cannot update other user's progress
+                value:
+                  error: 'Cannot update progress for other users'
+      '404':
+        description: Mission not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              notFound:
+                summary: Mission does not exist
+                value:
+                  error: 'Mission not found'
+
+  post:
+    tags:
+      - Progress
+    summary: Initialize user's mission progress
+    description: |
+      Creates a new progress record for a user's mission (first time watching).
+
+      **Authentication:**
+      - Requires valid JWT token
+      - User can only create their own progress
+
+      **Usage:**
+      - Called when user starts a mission for the first time
+      - Initializes progress with watchPositionSeconds: 0 and status: UNCOMPLETED
+
+      **Note:**
+      - If progress already exists, returns 409 Conflict
+      - Use PUT endpoint for updating existing progress
+    operationId: createUserMissionProgress
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          example: 1
+      - name: missionId
+        in: path
+        required: true
+        description: Mission ID
+        schema:
+          type: integer
+          example: 1
+    responses:
+      '201':
+        description: Progress created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/missions.yaml#/UserMissionProgress'
+            examples:
+              created:
+                summary: Progress initialized
+                value:
+                  missionId: 1
+                  status: 'UNCOMPLETED'
+                  watchPositionSeconds: 0
+      '401':
+        description: Unauthorized - invalid or missing token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              unauthorized:
+                summary: Invalid or missing token
+                value:
+                  error: 'Unauthorized or invalid token'
+      '403':
+        description: Forbidden - cannot create progress for other users
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              forbidden:
+                summary: Cannot create progress for other users
+                value:
+                  error: 'Cannot create progress for other users'
+      '404':
+        description: Mission not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              notFound:
+                summary: Mission does not exist
+                value:
+                  error: 'Mission not found'
+      '409':
+        description: Progress already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              conflict:
+                summary: Progress record already exists
+                value:
+                  error: 'Progress already exists for this mission'

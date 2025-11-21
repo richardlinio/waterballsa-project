@@ -56,16 +56,25 @@ detail:
       - No authentication required
       - Anyone can view journey structure and mission titles
 
+      **Authentication (Optional):**
+      - If JWT token is provided, response will include mission status for the authenticated user
+      - Mission status shows progress: UNCOMPLETED, COMPLETED, or DELIVERED
+      - Without authentication, status field will be null
+
       **Response Structure:**
       - Journey basic information
       - List of chapters with their missions
-      - Each mission includes: id, type, title, and free preview status
+      - Each mission includes: id, type, title, free preview status, and status (if authenticated)
       - Mission details (video URLs, duration, content) are NOT included in this endpoint (use mission detail endpoint)
 
       **Note:**
       - Chapters and missions are ordered by their order_index
       - Free preview missions are marked with isFreePreview: true
+      - Mission status is retrieved from user_mission_progress table (defaults to UNCOMPLETED if no progress record exists)
     operationId: getJourneyDetail
+    security:
+      - bearerAuth: []
+      - {}
     parameters:
       - name: journeyId
         in: path
@@ -82,8 +91,8 @@ detail:
             schema:
               $ref: '../schemas/journeys.yaml#/JourneyDetail'
             examples:
-              success:
-                summary: Journey with chapters and missions
+              authenticated:
+                summary: Journey with chapters and missions (authenticated user)
                 value:
                   id: 1
                   title: '軟體設計模式精通之旅'
@@ -100,11 +109,13 @@ detail:
                           title: '這門課手把手帶你成為架構設計的高手'
                           isFreePreview: true
                           orderIndex: 1
+                          status: 'DELIVERED'
                         - id: 2
                           type: 'VIDEO'
                           title: '你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code'
                           isFreePreview: true
                           orderIndex: 2
+                          status: 'COMPLETED'
                     - id: 2
                       title: '架構思維的 C.A. 模式'
                       orderIndex: 2
@@ -114,6 +125,42 @@ detail:
                           title: '架構師該如何思考'
                           isFreePreview: false
                           orderIndex: 1
+                          status: 'UNCOMPLETED'
+              unauthenticated:
+                summary: Journey with chapters and missions (unauthenticated)
+                value:
+                  id: 1
+                  title: '軟體設計模式精通之旅'
+                  description: '用 C.A. 模式大大提昇系統思維能力'
+                  coverImageUrl: 'https://example.com/cover1.jpg'
+                  teacherName: '水球潘'
+                  chapters:
+                    - id: 1
+                      title: '課程介紹'
+                      orderIndex: 1
+                      missions:
+                        - id: 1
+                          type: 'VIDEO'
+                          title: '這門課手把手帶你成為架構設計的高手'
+                          isFreePreview: true
+                          orderIndex: 1
+                          status: null
+                        - id: 2
+                          type: 'VIDEO'
+                          title: '你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code'
+                          isFreePreview: true
+                          orderIndex: 2
+                          status: null
+                    - id: 2
+                      title: '架構思維的 C.A. 模式'
+                      orderIndex: 2
+                      missions:
+                        - id: 3
+                          type: 'VIDEO'
+                          title: '架構師該如何思考'
+                          isFreePreview: false
+                          orderIndex: 1
+                          status: null
       '404':
         description: Journey not found
         content:
