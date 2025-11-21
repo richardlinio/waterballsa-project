@@ -49,29 +49,30 @@ Table access_tokens {
 }
 
 // ============================================================
-// 2. 看課模組 (Course Module)
+// 2. 看課模組 (Journey Module)
 // ============================================================
 
-Table courses {
+Table journeys {
   id bigserial [primary key]
-  title varchar(200) [not null, note: '課程標題']
-  description text [note: '課程描述']
+  title varchar(200) [not null, note: '旅程標題']
+  description text [note: '旅程描述']
   cover_image_url varchar(500) [note: '封面圖 URL']
-  price decimal(10,2) [not null, default: 0, note: '課程價格']
+  teacher_name varchar(100) [not null, note: '老師名字']
+  price decimal(10,2) [not null, default: 0, note: '旅程價格']
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp [not null, default: `now()`]
   deleted_at timestamp [null, note: '軟刪除時間戳']
 
   indexes {
-    title [name: 'idx_courses_title']
+    title [name: 'idx_journeys_title']
   }
 
-  note: '課程表'
+  note: '學習旅程表'
 }
 
 Table chapters {
   id bigserial [primary key]
-  course_id bigint [not null, ref: > courses.id]
+  journey_id bigint [not null, ref: > journeys.id]
   title varchar(255) [not null, note: '章節標題']
   order_index integer [not null, note: '章節順序']
   created_at timestamp [not null, default: `now()`]
@@ -79,79 +80,121 @@ Table chapters {
   deleted_at timestamp [null, note: '軟刪除時間戳']
 
   indexes {
-    (course_id, order_index) [unique, name: 'idx_chapters_course_order']
+    (journey_id, order_index) [unique, name: 'idx_chapters_journey_order']
   }
 
-  note: '課程章節表'
+  note: '旅程章節表'
 }
 
-Table units {
+Enum mission_type {
+  VIDEO [note: '影片任務']
+  ARTICLE [note: '文章任務']
+  QUESTIONNAIRE [note: '問卷任務']
+}
+
+Enum mission_status {
+  UNCOMPLETED [note: '未完成：任務進行中或尚未開始']
+  COMPLETED [note: '已完成：任務已達成完成條件但尚未交付']
+  DELIVERED [note: '已交付：任務已交付並獲得獎勵']
+}
+
+Enum mission_access_level {
+  PUBLIC [note: '公開：未登入即可觀看']
+  AUTHENTICATED [note: '需登入：需登入帳號才可觀看']
+  PURCHASED [note: '需購買：需購買旅程才可觀看']
+}
+
+Table missions {
   id bigserial [primary key]
   chapter_id bigint [not null, ref: > chapters.id]
-  title varchar(255) [not null, note: '單元標題']
-  video_url varchar(500) [not null, note: '影片 URL']
-  duration_seconds integer [not null, note: '影片長度（秒）']
-  experience_reward integer [not null, default: 100, note: '交付後獲得的經驗值（MVP 固定 100）']
-  is_free_preview boolean [not null, default: false, note: '是否為免費試看單元']
-  order_index integer [not null, note: '單元順序']
+  type mission_type [not null, default: 'VIDEO', note: '任務類型：影片、文章或問卷']
+  title varchar(255) [not null, note: '任務標題']
+  description text [null, note: '任務詳細描述']
+  access_level mission_access_level [not null, default: 'PURCHASED', note: '存取權限層級']
+  order_index integer [not null, note: '任務順序']
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp [not null, default: `now()`]
   deleted_at timestamp [null, note: '軟刪除時間戳']
 
   indexes {
-    (chapter_id, order_index) [unique, name: 'idx_units_chapter_order']
+    (chapter_id, order_index) [unique, name: 'idx_missions_chapter_order']
+    access_level [name: 'idx_missions_access_level']
   }
 
-  note: '課程單元（影片）表'
+  note: '學習任務表，支援影片、文章、問卷等類型。內容與獎勵已獨立至 mission_contents 和 mission_rewards 表。存取權限分為 PUBLIC(公開)、AUTHENTICATED(需登入)、PURCHASED(需購買)'
 }
 
-Table user_unit_progress {
+Table user_mission_progress {
   id bigserial [primary key]
   user_id bigint [not null, ref: > users.id]
-  unit_id bigint [not null, ref: > units.id]
-  watch_position_seconds integer [not null, default: 0, note: '觀看位置（秒），用於續播']
+  mission_id bigint [not null, ref: > missions.id]
+  status mission_status [not null, default: 'UNCOMPLETED', note: '任務狀態：未完成/已完成/已交付']
+  watch_position_seconds integer [not null, default: 0, note: '影片觀看位置（秒），type=VIDEO 時使用']
+
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp [not null, default: `now()`]
   deleted_at timestamp [null, note: '軟刪除時間戳']
 
   indexes {
-    (user_id, unit_id) [unique, name: 'idx_progress_user_unit']
+    (user_id, mission_id) [unique, name: 'idx_progress_user_mission']
     user_id [name: 'idx_progress_user_id']
-    unit_id [name: 'idx_progress_unit_id']
+    mission_id [name: 'idx_progress_mission_id']
+    status [name: 'idx_progress_status']
   }
 
-  note: '使用者單元觀看進度表，系統每 10 秒記錄一次'
+  note: '使用者任務進度表，整合任務進度追蹤與交付狀態。影片每 10 秒更新一次進度，文章由前端標記完成，交付後狀態變更為 DELIVERED'
 }
 
-Table user_unit_submissions {
+// ============================================================
+// 3. 獎勵模組 (Rewards Module)
+// ============================================================
+
+Enum reward_type {
+  EXPERIENCE [note: '經驗值獎勵']
+}
+
+Table rewards {
   id bigserial [primary key]
-  user_id bigint [not null, ref: > users.id]
-  unit_id bigint [not null, ref: > units.id]
-  submitted_at timestamp [not null, default: `now()`, note: '交付時間']
+  mission_id bigint [not null, ref: > missions.id, note: '關聯的任務 ID']
+  reward_type reward_type [not null, note: '獎勵類型']
+  reward_value integer [not null, default: 0, note: '獎勵數值']
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp [not null, default: `now()`]
   deleted_at timestamp [null, note: '軟刪除時間戳']
 
   indexes {
-    (user_id, unit_id) [unique, name: 'idx_submissions_user_unit']
-    user_id [name: 'idx_submissions_user_id']
-    submitted_at [name: 'idx_submissions_time']
+    mission_id [name: 'idx_rewards_mission_id']
+    (mission_id, reward_type) [unique, name: 'idx_rewards_mission_type']
   }
 
-  note: '使用者單元交付表，每個單元只能交付一次'
+  note: '任務獎勵表，支援多種獎勵類型（現階段主要使用 EXPERIENCE），單一任務可設定多種獎勵'
 }
 
 // ============================================================
-// Relationships Summary
+// 4. 任務內容模組 (Mission Contents Module)
 // ============================================================
 
-// Course Structure:
-// courses (1) ---> (*) chapters ---> (*) units
+Enum content_type {
+  VIDEO [note: '影片內容']
+  ARTICLE [note: '文章內容']
+  FORM [note: '表單']
+}
 
-// User Authentication:
-// users (1) ---> (*) user_sessions
+Table mission_contents {
+  id bigserial [primary key]
+  mission_id bigint [not null, ref: > missions.id, note: '關聯的任務 ID']
+  content_type content_type [not null, note: '內容類型']
+  content_url varchar(1000) [not null, note: '內容 URL 或路徑']
+  content_order integer [not null, default: 0, note: '內容順序（同一任務內的排序）']
+  duration_seconds integer [null, note: '影片長度（秒，僅 VIDEO 類型使用）']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  deleted_at timestamp [null, note: '軟刪除時間戳']
 
-// User Progress:
-// users (1) ---> (*) user_unit_progress (*) <--- (1) units
-// users (1) ---> (*) user_unit_submissions (*) <--- (1) units
+  indexes {
+    mission_id [name: 'idx_contents_mission_id']
+    (mission_id, content_order) [unique, name: 'idx_contents_mission_order']
+  }
 
+  note: '任務內容表，支援單一任務擁有多個內容項目（如多段影片、混合影片與文章等）'
+}
