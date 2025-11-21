@@ -1,0 +1,28 @@
+HealthResponse:
+  type: object
+  required:
+    - status
+    - database
+  properties:
+    status:
+      type: string
+      enum:
+        - UP
+        - DOWN
+      description: Overall health status of the service
+    database:
+      type: string
+      enum:
+        - UP
+        - DOWN
+      description: Database connection health status
+
+ErrorResponse:
+  type: object
+  required:
+    - error
+  properties:
+    error:
+      type: string
+      description: Error message
+      example: 'An error occurred'

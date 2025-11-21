@@ -1,0 +1,127 @@
+JourneyListItem:
+  type: object
+  required:
+    - id
+    - title
+    - description
+    - coverImageUrl
+    - teacherName
+  properties:
+    id:
+      type: integer
+      description: Journey ID
+      example: 1
+    title:
+      type: string
+      description: Journey title
+      example: '軟體設計模式精通之旅'
+    description:
+      type: string
+      description: Journey description
+      example: '用 C.A. 模式大大提昇系統思維能力'
+    coverImageUrl:
+      type: string
+      format: uri
+      description: Cover image URL
+      example: 'https://example.com/cover1.jpg'
+    teacherName:
+      type: string
+      description: Teacher name
+      example: '水球潘'
+
+JourneyDetail:
+  type: object
+  required:
+    - id
+    - title
+    - description
+    - coverImageUrl
+    - teacherName
+    - chapters
+  properties:
+    id:
+      type: integer
+      description: Journey ID
+      example: 1
+    title:
+      type: string
+      description: Journey title
+      example: '軟體設計模式精通之旅'
+    description:
+      type: string
+      description: Journey description
+      example: '用 C.A. 模式大大提昇系統思維能力'
+    coverImageUrl:
+      type: string
+      format: uri
+      description: Cover image URL
+      example: 'https://example.com/cover1.jpg'
+    teacherName:
+      type: string
+      description: Teacher name
+      example: '水球潘'
+    chapters:
+      type: array
+      description: List of chapters in this journey
+      items:
+        $ref: '#/Chapter'
+
+Chapter:
+  type: object
+  required:
+    - id
+    - title
+    - orderIndex
+    - missions
+  properties:
+    id:
+      type: integer
+      description: Chapter ID
+      example: 1
+    title:
+      type: string
+      description: Chapter title
+      example: '課程介紹'
+    orderIndex:
+      type: integer
+      description: Chapter order index
+      example: 1
+    missions:
+      type: array
+      description: List of missions in this chapter
+      items:
+        $ref: '#/MissionSummary'
+
+MissionSummary:
+  type: object
+  required:
+    - id
+    - type
+    - title
+    - isFreePreview
+    - orderIndex
+  properties:
+    id:
+      type: integer
+      description: Mission ID
+      example: 1
+    type:
+      type: string
+      enum:
+        - VIDEO
+        - ARTICLE
+        - QUESTIONNAIRE
+      description: Mission type (video, article, or questionnaire)
+      example: 'VIDEO'
+    title:
+      type: string
+      description: Mission title
+      example: '這門課手把手帶你成為架構設計的高手'
+    isFreePreview:
+      type: boolean
+      description: Whether this mission is free to preview
+      example: true
+    orderIndex:
+      type: integer
+      description: Mission order index within the chapter
+      example: 1

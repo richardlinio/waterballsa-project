@@ -1,0 +1,59 @@
+me:
+  get:
+    tags:
+      - Users
+    summary: Get current user profile
+    description: |
+      Returns the current authenticated user's profile information.
+
+      **Authentication:**
+      - Requires valid JWT token
+
+      **Response Includes:**
+      - User ID
+      - Username
+      - Experience points (total accumulated)
+      - Current level (calculated from experience)
+      - User role (STUDENT, TEACHER, ADMIN)
+
+      **Level Information:**
+      - Level is calculated based on total experience points
+      - Maximum level is 36 (requires 65000+ XP)
+    operationId: getCurrentUser
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: Successfully retrieved user profile
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserProfile'
+            examples:
+              student:
+                summary: Student user profile
+                value:
+                  id: 1
+                  username: 'john_doe123'
+                  experiencePoints: 1500
+                  level: 4
+                  role: 'STUDENT'
+              highLevel:
+                summary: High-level student
+                value:
+                  id: 2
+                  username: 'advanced_learner'
+                  experiencePoints: 15000
+                  level: 11
+                  role: 'STUDENT'
+      '401':
+        description: Unauthorized - invalid or missing token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              unauthorized:
+                summary: Invalid or missing token
+                value:
+                  error: 'Unauthorized or invalid token'

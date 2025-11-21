@@ -1,0 +1,122 @@
+MissionDetail:
+  type: object
+  required:
+    - id
+    - type
+    - title
+    - experienceReward
+    - isFreePreview
+    - isCompleted
+    - isSubmitted
+  properties:
+    id:
+      type: integer
+      description: Mission ID
+      example: 1
+    type:
+      type: string
+      enum:
+        - VIDEO
+        - ARTICLE
+        - QUESTIONNAIRE
+      description: Mission type
+      example: 'VIDEO'
+    title:
+      type: string
+      description: Mission title
+      example: '這門課手把手帶你成為架構設計的高手'
+    videoUrl:
+      type: string
+      format: uri
+      description: Video URL (YouTube embed, only for VIDEO type)
+      example: 'https://www.youtube.com/embed/abc123'
+    durationSeconds:
+      type: integer
+      description: Video duration in seconds (only for VIDEO type)
+      example: 300
+    articleContent:
+      type: string
+      description: Article content in HTML format (only for ARTICLE type)
+      example: '<h1>Introduction</h1><p>Article content...</p>'
+    experienceReward:
+      type: integer
+      description: Experience points rewarded upon submission
+      example: 100
+    isFreePreview:
+      type: boolean
+      description: Whether this mission is free to preview
+      example: true
+    watchPositionSeconds:
+      type: integer
+      description: Current watch position in seconds (only for VIDEO type)
+      example: 150
+    isArticleCompleted:
+      type: boolean
+      description: Whether article has been read to the end (only for ARTICLE type)
+      example: false
+    isCompleted:
+      type: boolean
+      description: |
+        Whether this mission is completed.
+        For VIDEO: true when watchPositionSeconds == durationSeconds
+        For ARTICLE: true when isArticleCompleted == true
+      example: false
+    isSubmitted:
+      type: boolean
+      description: Whether this mission has been submitted for experience points
+      example: false
+
+UpdateProgressRequest:
+  type: object
+  properties:
+    watchPositionSeconds:
+      type: integer
+      description: Current watch position in seconds (for VIDEO missions)
+      example: 150
+    isArticleCompleted:
+      type: boolean
+      description: Mark article as completed (for ARTICLE missions)
+      example: true
+
+ProgressUpdateResponse:
+  type: object
+  required:
+    - isCompleted
+  properties:
+    watchPositionSeconds:
+      type: integer
+      description: Updated watch position (for VIDEO missions)
+      example: 150
+    isArticleCompleted:
+      type: boolean
+      description: Article completion status (for ARTICLE missions)
+      example: true
+    isCompleted:
+      type: boolean
+      description: Whether the mission is now completed
+      example: false
+
+SubmitResponse:
+  type: object
+  required:
+    - message
+    - experienceGained
+    - totalExperience
+    - currentLevel
+  properties:
+    message:
+      type: string
+      description: Success message
+      example: 'Mission submitted successfully'
+    experienceGained:
+      type: integer
+      description: Experience points gained from this submission
+      example: 100
+    totalExperience:
+      type: integer
+      description: User's total experience points after submission
+      example: 1500
+    currentLevel:
+      type: integer
+      description: User's current level after submission
+      example: 4

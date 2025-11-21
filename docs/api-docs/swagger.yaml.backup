@@ -1,0 +1,1272 @@
+openapi: 3.0.3
+info:
+  title: WaterBall SA Backend API
+  description: |
+    Backend API for WaterBall SA Platform
+
+    This API provides endpoints for the WaterBall SA learning platform, including health checks,
+    journey management, and user interactions.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@waterballsa.tw
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://api.waterballsa.tw
+    description: Production server
+
+tags:
+  - name: Health Check
+    description: API health monitoring endpoints
+  - name: Auth
+    description: User authentication and authorization endpoints
+  - name: Journeys
+    description: Learning journey management endpoints
+  - name: Missions
+    description: Learning mission (video/article) management endpoints
+  - name: Users
+    description: User profile and information endpoints
+
+paths:
+  /healthz:
+    get:
+      tags:
+        - Health Check
+      summary: Health check endpoint
+      description: |
+        Returns the database connection health status.
+
+        Returns HTTP 200 when database is healthy, HTTP 503 when database is down.
+      operationId: checkHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: Database is healthy
+                  value:
+                    status: UP
+                    database: UP
+        '503':
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                unhealthy:
+                  summary: Database connection failed
+                  value:
+                    status: DOWN
+                    database: DOWN
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: User registration
+      description: |
+        Register a new user with username and password.
+
+        **Rate Limiting:**
+        - Maximum 5 registrations per IP per hour
+        - Returns 400 with generic error message when rate limit exceeded (avoids information leakage)
+
+        **Validation:**
+        - Username and password must be alphanumeric with special characters allowed
+        - Both have length limits
+        - Initial experience points set to 0
+        - Redirects to login page on success
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              valid:
+                summary: Valid registration
+                value:
+                  username: 'john_doe123'
+                  password: 'SecurePass123!'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              examples:
+                success:
+                  summary: Registration successful
+                  value:
+                    message: 'Registration successful'
+                    userId: 1
+        '400':
+          description: Invalid request data or rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidFormat:
+                  summary: Invalid username or password format
+                  value:
+                    error: 'Invalid username or password format'
+                rateLimited:
+                  summary: Rate limit exceeded (generic message for security)
+                  value:
+                    error: 'Registration failed. Please try again later.'
+        '409':
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicate:
+                  summary: Username already taken
+                  value:
+                    error: 'Username already exists'
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: User login
+      description: |
+        Authenticate user with username and password.
+
+        **Rate Limiting:**
+        - Maximum 5 failed attempts per IP per 15 minutes
+        - Returns 401 when rate limit exceeded (same as invalid credentials to avoid information leakage)
+
+        **Security:**
+        - Returns JWT access token (expires in 1 day)
+        - Token should be included in Authorization header for protected endpoints
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              valid:
+                summary: Valid login credentials
+                value:
+                  username: 'john_doe123'
+                  password: 'SecurePass123!'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                success:
+                  summary: Login successful
+                  value:
+                    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+                    user:
+                      id: 1
+                      username: 'john_doe123'
+                      experience: 0
+        '401':
+          description: Invalid credentials or rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid:
+                  summary: Wrong username or password
+                  value:
+                    error: 'Invalid username or password'
+                rateLimited:
+                  summary: Rate limit exceeded (same error message for security)
+                  value:
+                    error: 'Invalid username or password'
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: User logout
+      description: |
+        Logout current user and invalidate the access token.
+
+        **Token Invalidation:**
+        - Access token is added to blacklist (stored in database)
+        - Blacklist entries auto-expire when token expires
+        - After logout, token cannot be used to access protected endpoints
+
+        **Note:** Requires valid access token in Authorization header
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+              examples:
+                success:
+                  summary: Logout successful
+                  value:
+                    message: 'Logout successful'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Invalid or missing token
+                  value:
+                    error: 'Unauthorized or invalid token'
+
+  /journeys:
+    get:
+      tags:
+        - Journeys
+      summary: Get journey list
+      description: |
+        Returns a list of all available learning journeys.
+
+        **Public Access:**
+        - No authentication required
+        - Returns journey basic information including cover image, title, description, and price
+
+        **Response:**
+        - Returns all journeys that are not soft-deleted
+        - Journeys are returned in creation order ((chronologically)
+      operationId: getJourneys
+      responses:
+        '200':
+          description: Successfully retrieved journey list
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - journeys
+                properties:
+                  journeys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JourneyListItem'
+              examples:
+                success:
+                  summary: Journey list with multiple journeys
+                  value:
+                    journeys:
+                      - id: 1
+                        title: '軟體設計模式精通之旅'
+                        description: '用 C.A. 模式大大提昇系統思維能力'
+                        coverImageUrl: 'https://example.com/cover1.jpg'
+                        teacherName: '水球潘'
+                        price: 3000.00
+                      - id: 2
+                        title: 'AI x BDD：規格驅動全自動開發術'
+                        description: '用半年的時間，徹底學會如何結合 TDD、BDD 與 AI，實現 100% 全自動化、高精準度的程式開發'
+                        coverImageUrl: 'https://example.com/cover2.jpg'
+                        teacherName: '水球潘'
+                        price: 0.00
+
+  /journeys/{journeyId}:
+    get:
+      tags:
+        - Journeys
+      summary: Get journey details
+      description: |
+        Returns detailed information about a specific journey, including all chapters and missions.
+
+        **Public Access:**
+        - No authentication required
+        - Anyone can view journey structure and mission titles
+
+        **Response Structure:**
+        - Journey basic information
+        - List of chapters with their missions
+        - Each mission includes: id, title, duration, experience reward, and free preview status
+        - Video URLs are NOT included in this endpoint (use mission detail endpoint)
+
+        **Note:**
+        - Chapters and missions are ordered by their order_index
+        - Free preview missions are marked with isFreePreview: true
+      operationId: getJourneyDetail
+      parameters:
+        - name: journeyId
+          in: path
+          required: true
+          description: Journey ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Successfully retrieved journey details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyDetail'
+              examples:
+                success:
+                  summary: Journey with chapters and missions
+                  value:
+                    id: 1
+                    title: '軟體設計模式精通之旅'
+                    description: '用 C.A. 模式大大提昇系統思維能力'
+                    coverImageUrl: 'https://example.com/cover1.jpg'
+                    teacherName: '水球潘'
+                    price: 3000.00
+                    chapters:
+                      - id: 1
+                        title: '課程介紹'
+                        orderIndex: 1
+                        missions:
+                          - id: 1
+                            title: '這門課手把手帶你成為架構設計的高手'
+                            durationSeconds: 300
+                            experienceReward: 100
+                            isFreePreview: true
+                            orderIndex: 1
+                          - id: 2
+                            title: '你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code'
+                            durationSeconds: 450
+                            experienceReward: 100
+                            isFreePreview: true
+                            orderIndex: 2
+                      - id: 2
+                        title: '架構思維的 C.A. 模式'
+                        orderIndex: 2
+                        missions:
+                          - id: 3
+                            title: '架構師該如何思考'
+                            durationSeconds: 600
+                            experienceReward: 100
+                            isFreePreview: false
+                            orderIndex: 1
+        '404':
+          description: Journey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Journey does not exist
+                  value:
+                    error: 'Journey not found'
+
+  /journeys/{journeyId}/missions/{missionId}:
+    get:
+      tags:
+        - Missions
+      summary: Get mission details
+      description: |
+        Returns detailed information about a specific mission (video or article) including content and user progress.
+
+        **Authentication:**
+        - Requires valid JWT token
+
+        **Mission Types:**
+        - VIDEO: Returns videoUrl, durationSeconds, and watchPositionSeconds
+        - ARTICLE: Returns articleContent and isArticleCompleted
+
+        **Response Includes:**
+        - Mission basic information (type, title, experience reward)
+        - Content (video URL or article content depending on type)
+        - User's progress (watch position for video, completion flag for article)
+        - Completion status (calculated from progress)
+        - Submission status (whether user has submitted this mission)
+
+        **Completion Status:**
+        - For VIDEO: isCompleted is true when watchPositionSeconds == durationSeconds
+        - For ARTICLE: isCompleted is true when isArticleCompleted == true
+        - isSubmitted: true when user has submitted this mission for experience points
+
+        **Free Preview:**
+        - All users can access missions with isFreePreview: true
+        - Other missions require journey purchase (MVP: all accessible)
+      operationId: getMissionDetail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: journeyId
+          in: path
+          required: true
+          description: Journey ID
+          schema:
+            type: integer
+            example: 1
+        - name: missionId
+          in: path
+          required: true
+          description: Mission ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Successfully retrieved mission details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionDetail'
+              examples:
+                videoNotStarted:
+                  summary: Video mission not started yet
+                  value:
+                    id: 1
+                    type: 'VIDEO'
+                    title: '這門課手把手帶你成為架構設計的高手'
+                    videoUrl: 'https://www.youtube.com/embed/abc123'
+                    durationSeconds: 300
+                    experienceReward: 100
+                    isFreePreview: true
+                    watchPositionSeconds: 0
+                    isCompleted: false
+                    isSubmitted: false
+                videoInProgress:
+                  summary: Video mission in progress
+                  value:
+                    id: 2
+                    type: 'VIDEO'
+                    title: '你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code'
+                    videoUrl: 'https://www.youtube.com/embed/def456'
+                    durationSeconds: 450
+                    experienceReward: 100
+                    isFreePreview: true
+                    watchPositionSeconds: 225
+                    isCompleted: false
+                    isSubmitted: false
+                videoCompleted:
+                  summary: Video mission completed but not submitted
+                  value:
+                    id: 3
+                    type: 'VIDEO'
+                    title: '架構師該如何思考'
+                    videoUrl: 'https://www.youtube.com/embed/ghi789'
+                    durationSeconds: 600
+                    experienceReward: 100
+                    isFreePreview: false
+                    watchPositionSeconds: 600
+                    isCompleted: true
+                    isSubmitted: false
+                articleNotCompleted:
+                  summary: Article mission not completed yet
+                  value:
+                    id: 5
+                    type: 'ARTICLE'
+                    title: 'UML 不是英文縮寫字'
+                    articleContent: '<h1>UML 介紹</h1><p>文章內容...</p>'
+                    experienceReward: 100
+                    isFreePreview: false
+                    isArticleCompleted: false
+                    isCompleted: false
+                    isSubmitted: false
+                articleCompletedAndSubmitted:
+                  summary: Article mission completed and submitted
+                  value:
+                    id: 6
+                    type: 'ARTICLE'
+                    title: '設計模式概論'
+                    articleContent: '<h1>設計模式</h1><p>完整文章內容...</p>'
+                    experienceReward: 100
+                    isFreePreview: false
+                    isArticleCompleted: true
+                    isCompleted: true
+                    isSubmitted: true
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Invalid or missing token
+                  value:
+                    error: 'Unauthorized or invalid token'
+        '404':
+          description: Mission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Mission does not exist
+                  value:
+                    error: 'Mission not found'
+
+    put:
+      tags:
+        - Missions
+      summary: Update mission progress
+      description: |
+        Updates the user's progress for a specific mission (video or article).
+
+        **Authentication:**
+        - Requires valid JWT token
+
+        **Progress Tracking:**
+        - For VIDEO missions:
+          - Frontend calls this API every 10 seconds during video playback
+          - Send watchPositionSeconds to update progress
+          - Backend automatically checks if watchPositionSeconds == durationSeconds
+          - When equal, mission status becomes "completed" but NOT "submitted"
+          - Progress can be updated multiple times (for rewatching)
+
+        - For ARTICLE missions:
+          - Frontend calls this API when user scrolls to bottom of article
+          - Send isArticleCompleted: true to mark as completed
+          - Once marked completed, mission status becomes "completed" but NOT "submitted"
+
+        **Completion Detection:**
+        - For VIDEO: Backend compares watchPositionSeconds with mission's durationSeconds
+        - For ARTICLE: Backend checks isArticleCompleted flag
+        - User must manually submit (via POST endpoint) to get experience points
+
+        **Note:**
+        - This endpoint does NOT grant experience points
+        - Experience points are only granted via submission endpoint
+      operationId: updateMissionProgress
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: journeyId
+          in: path
+          required: true
+          description: Journey ID
+          schema:
+            type: integer
+            example: 1
+        - name: missionId
+          in: path
+          required: true
+          description: Mission ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProgressRequest'
+            examples:
+              videoInProgress:
+                summary: Update video progress to 150 seconds
+                value:
+                  watchPositionSeconds: 150
+              videoCompleted:
+                summary: Update video progress to completion (300 seconds)
+                value:
+                  watchPositionSeconds: 300
+              articleCompleted:
+                summary: Mark article as completed
+                value:
+                  isArticleCompleted: true
+      responses:
+        '200':
+          description: Progress updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressUpdateResponse'
+              examples:
+                videoInProgress:
+                  summary: Video progress updated (not completed)
+                  value:
+                    watchPositionSeconds: 150
+                    isCompleted: false
+                videoCompleted:
+                  summary: Video progress updated (now completed)
+                  value:
+                    watchPositionSeconds: 300
+                    isCompleted: true
+                articleCompleted:
+                  summary: Article marked as completed
+                  value:
+                    isArticleCompleted: true
+                    isCompleted: true
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidProgress:
+                  summary: Invalid watch position
+                  value:
+                    error: 'Invalid watch position: must be between 0 and video duration'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Invalid or missing token
+                  value:
+                    error: 'Unauthorized or invalid token'
+        '404':
+          description: Mission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Mission does not exist
+                  value:
+                    error: 'Mission not found'
+
+  /journeys/{journeyId}/missions/{missionId}/submit:
+    post:
+      tags:
+        - Missions
+      summary: Submit mission for experience points
+      description: |
+        Submit a completed mission to receive experience points.
+
+        **Authentication:**
+        - Requires valid JWT token
+
+        **Requirements:**
+        - Mission must be 100% completed (watchPositionSeconds == durationSeconds)
+        - Cannot submit if not completed
+        - Each mission can only be submitted once
+
+        **Effects:**
+        - Adds experience points to user (amount defined in mission)
+        - Updates user level based on new experience points
+        - Records submission timestamp in database
+
+        **Level Calculation:**
+        - Level 1: 0-199 XP
+        - Level 2: 200-499 XP
+        - Level 3: 500-1499 XP
+        - Level 4: 1500-2999 XP
+        - Level 5: 3000-4999 XP
+        - Level 6: 5000-6999 XP
+        - Level 7+: +2000 XP per level
+        - Level 36 (max): 65000+ XP
+
+        **Note:**
+        - Experience points are only granted once per mission
+        - Duplicate submissions return 409 Conflict
+      operationId: submitMission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: journeyId
+          in: path
+          required: true
+          description: Journey ID
+          schema:
+            type: integer
+            example: 1
+        - name: missionId
+          in: path
+          required: true
+          description: Mission ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Mission submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitResponse'
+              examples:
+                success:
+                  summary: Successfully submitted and gained experience
+                  value:
+                    message: 'Mission submitted successfully'
+                    experienceGained: 100
+                    totalExperience: 1500
+                    currentLevel: 4
+                levelUp:
+                  summary: Submitted and leveled up
+                  value:
+                    message: 'Mission submitted successfully'
+                    experienceGained: 100
+                    totalExperience: 3000
+                    currentLevel: 5
+        '400':
+          description: Mission not completed yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notCompleted:
+                  summary: Cannot submit incomplete mission
+                  value:
+                    error: 'Mission must be 100% completed before submission'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Invalid or missing token
+                  value:
+                    error: 'Unauthorized or invalid token'
+        '404':
+          description: Mission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Mission does not exist
+                  value:
+                    error: 'Mission not found'
+        '409':
+          description: Mission already submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicate:
+                  summary: Cannot submit twice
+                  value:
+                    error: 'Mission has already been submitted'
+
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      description: |
+        Returns the current authenticated user's profile information.
+
+        **Authentication:**
+        - Requires valid JWT token
+
+        **Response Includes:**
+        - User ID
+        - Username
+        - Experience points (total accumulated)
+        - Current level (calculated from experience)
+        - User role (STUDENT, TEACHER, ADMIN)
+
+        **Level Information:**
+        - Level is calculated based on total experience points
+        - Maximum level is 36 (requires 65000+ XP)
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                student:
+                  summary: Student user profile
+                  value:
+                    id: 1
+                    username: 'john_doe123'
+                    experiencePoints: 1500
+                    level: 4
+                    role: 'STUDENT'
+                highLevel:
+                  summary: High-level student
+                  value:
+                    id: 2
+                    username: 'advanced_learner'
+                    experiencePoints: 15000
+                    level: 11
+                    role: 'STUDENT'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Invalid or missing token
+                  value:
+                    error: 'Unauthorized or invalid token'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token obtained from login endpoint.
+
+        **Usage:**
+        Include in Authorization header: `Authorization: Bearer <token>`
+
+        **Token Contents:**
+        - user_id: User identifier
+        - username: Username
+        - iat: Issued at timestamp
+        - exp: Expiration timestamp (1 day from iat)
+
+        **Security:**
+        - Tokens expire in 1 day
+        - Always use HTTPS in production
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - database
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+          description: Overall health status of the service
+        database:
+          type: string
+          enum:
+            - UP
+            - DOWN
+          description: Database connection health status
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_]+$'
+          description: Username (alphanumeric and underscore only)
+          example: 'john_doe123'
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          pattern: '^[a-zA-Z0-9@$!%*?&#]+$'
+          description: Password (alphanumeric and special characters, 8-72 characters)
+          example: 'SecurePass123!'
+
+    RegisterResponse:
+      type: object
+      required:
+        - message
+        - userId
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: 'Registration successful'
+        userId:
+          type: integer
+          description: Newly created user ID
+          example: 1
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: Username
+          example: 'john_doe123'
+        password:
+          type: string
+          description: Password
+          example: 'SecurePass123!'
+
+    LoginResponse:
+      type: object
+      required:
+        - accessToken
+        - user
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (expires in 1 day)
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        user:
+          $ref: '#/components/schemas/UserInfo'
+
+    UserInfo:
+      type: object
+      required:
+        - id
+        - username
+        - experience
+      properties:
+        id:
+          type: integer
+          description: User ID
+          example: 1
+        username:
+          type: string
+          description: Username
+          example: 'john_doe123'
+        experience:
+          type: integer
+          minimum: 0
+          description: User experience points
+          example: 0
+
+    LogoutResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: 'Logout successful'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: 'An error occurred'
+
+    JourneyListItem:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - coverImageUrl
+        - teacherName
+        - price
+      properties:
+        id:
+          type: integer
+          description: Journey ID
+          example: 1
+        title:
+          type: string
+          description: Journey title
+          example: '軟體設計模式精通之旅'
+        description:
+          type: string
+          description: Journey description
+          example: '用 C.A. 模式大大提昇系統思維能力'
+        coverImageUrl:
+          type: string
+          format: uri
+          description: Cover image URL
+          example: 'https://example.com/cover1.jpg'
+        teacherName:
+          type: string
+          description: Teacher name
+          example: '水球潘'
+        price:
+          type: number
+          format: decimal
+          description: Journey price
+          example: 3000.00
+
+    JourneyDetail:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - coverImageUrl
+        - teacherName
+        - price
+        - chapters
+      properties:
+        id:
+          type: integer
+          description: Journey ID
+          example: 1
+        title:
+          type: string
+          description: Journey title
+          example: '軟體設計模式精通之旅'
+        description:
+          type: string
+          description: Journey description
+          example: '用 C.A. 模式大大提昇系統思維能力'
+        coverImageUrl:
+          type: string
+          format: uri
+          description: Cover image URL
+          example: 'https://example.com/cover1.jpg'
+        teacherName:
+          type: string
+          description: Teacher name
+          example: '水球潘'
+        price:
+          type: number
+          format: decimal
+          description: Journey price
+          example: 3000.00
+        chapters:
+          type: array
+          description: List of chapters in this journey
+          items:
+            $ref: '#/components/schemas/Chapter'
+
+    Chapter:
+      type: object
+      required:
+        - id
+        - title
+        - orderIndex
+        - missions
+      properties:
+        id:
+          type: integer
+          description: Chapter ID
+          example: 1
+        title:
+          type: string
+          description: Chapter title
+          example: '課程介紹'
+        orderIndex:
+          type: integer
+          description: Chapter order index
+          example: 1
+        missions:
+          type: array
+          description: List of missions in this chapter
+          items:
+            $ref: '#/components/schemas/MissionSummary'
+
+    MissionSummary:
+      type: object
+      required:
+        - id
+        - type
+        - title
+        - experienceReward
+        - isFreePreview
+        - orderIndex
+      properties:
+        id:
+          type: integer
+          description: Mission ID
+          example: 1
+        type:
+          type: string
+          enum:
+            - VIDEO
+            - ARTICLE
+          description: Mission type (video or article)
+          example: 'VIDEO'
+        title:
+          type: string
+          description: Mission title
+          example: '這門課手把手帶你成為架構設計的高手'
+        durationSeconds:
+          type: integer
+          description: Video duration in seconds (only for VIDEO type)
+          example: 300
+        experienceReward:
+          type: integer
+          description: Experience points rewarded upon submission
+          example: 100
+        isFreePreview:
+          type: boolean
+          description: Whether this mission is free to preview
+          example: true
+        orderIndex:
+          type: integer
+          description: Mission order index within the chapter
+          example: 1
+
+    MissionDetail:
+      type: object
+      required:
+        - id
+        - type
+        - title
+        - experienceReward
+        - isFreePreview
+        - isCompleted
+        - isSubmitted
+      properties:
+        id:
+          type: integer
+          description: Mission ID
+          example: 1
+        type:
+          type: string
+          enum:
+            - VIDEO
+            - ARTICLE
+          description: Mission type
+          example: 'VIDEO'
+        title:
+          type: string
+          description: Mission title
+          example: '這門課手把手帶你成為架構設計的高手'
+        videoUrl:
+          type: string
+          format: uri
+          description: Video URL (YouTube embed, only for VIDEO type)
+          example: 'https://www.youtube.com/embed/abc123'
+        durationSeconds:
+          type: integer
+          description: Video duration in seconds (only for VIDEO type)
+          example: 300
+        articleContent:
+          type: string
+          description: Article content in HTML format (only for ARTICLE type)
+          example: '<h1>Introduction</h1><p>Article content...</p>'
+        experienceReward:
+          type: integer
+          description: Experience points rewarded upon submission
+          example: 100
+        isFreePreview:
+          type: boolean
+          description: Whether this mission is free to preview
+          example: true
+        watchPositionSeconds:
+          type: integer
+          description: Current watch position in seconds (only for VIDEO type)
+          example: 150
+        isArticleCompleted:
+          type: boolean
+          description: Whether article has been read to the end (only for ARTICLE type)
+          example: false
+        isCompleted:
+          type: boolean
+          description: |
+            Whether this mission is completed.
+            For VIDEO: true when watchPositionSeconds == durationSeconds
+            For ARTICLE: true when isArticleCompleted == true
+          example: false
+        isSubmitted:
+          type: boolean
+          description: Whether this mission has been submitted for experience points
+          example: false
+
+    UpdateProgressRequest:
+      type: object
+      properties:
+        watchPositionSeconds:
+          type: integer
+          description: Current watch position in seconds (for VIDEO missions)
+          example: 150
+        isArticleCompleted:
+          type: boolean
+          description: Mark article as completed (for ARTICLE missions)
+          example: true
+
+    ProgressUpdateResponse:
+      type: object
+      required:
+        - isCompleted
+      properties:
+        watchPositionSeconds:
+          type: integer
+          description: Updated watch position (for VIDEO missions)
+          example: 150
+        isArticleCompleted:
+          type: boolean
+          description: Article completion status (for ARTICLE missions)
+          example: true
+        isCompleted:
+          type: boolean
+          description: Whether the mission is now completed
+          example: false
+
+    SubmitResponse:
+      type: object
+      required:
+        - message
+        - experienceGained
+        - totalExperience
+        - currentLevel
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: 'Mission submitted successfully'
+        experienceGained:
+          type: integer
+          description: Experience points gained from this submission
+          example: 100
+        totalExperience:
+          type: integer
+          description: User's total experience points after submission
+          example: 1500
+        currentLevel:
+          type: integer
+          description: User's current level after submission
+          example: 4
+
+    UserProfile:
+      type: object
+      required:
+        - id
+        - username
+        - experiencePoints
+        - level
+        - role
+      properties:
+        id:
+          type: integer
+          description: User ID
+          example: 1
+        username:
+          type: string
+          description: Username
+          example: 'john_doe123'
+        experiencePoints:
+          type: integer
+          minimum: 0
+          description: Total accumulated experience points
+          example: 1500
+        level:
+          type: integer
+          minimum: 1
+          maximum: 36
+          description: Current level (1-36)
+          example: 4
+        role:
+          type: string
+          enum:
+            - STUDENT
+            - TEACHER
+            - ADMIN
+          description: User role
+          example: 'STUDENT'

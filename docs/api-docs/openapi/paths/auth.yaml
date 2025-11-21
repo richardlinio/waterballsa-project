@@ -1,0 +1,170 @@
+register:
+  post:
+    tags:
+      - Auth
+    summary: User registration
+    description: |
+      Register a new user with username and password.
+
+      **Rate Limiting:**
+      - Maximum 5 registrations per IP per hour
+      - Returns 400 with generic error message when rate limit exceeded (avoids information leakage)
+
+      **Validation:**
+      - Username and password must be alphanumeric with special characters allowed
+      - Both have length limits
+      - Initial experience points set to 0
+      - Redirects to login page on success
+    operationId: register
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/auth.yaml#/RegisterRequest'
+          examples:
+            valid:
+              summary: Valid registration
+              value:
+                username: 'john_doe123'
+                password: 'SecurePass123!'
+    responses:
+      '201':
+        description: User registered successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/RegisterResponse'
+            examples:
+              success:
+                summary: Registration successful
+                value:
+                  message: 'Registration successful'
+                  userId: 1
+      '400':
+        description: Invalid request data or rate limit exceeded
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              invalidFormat:
+                summary: Invalid username or password format
+                value:
+                  error: 'Invalid username or password format'
+              rateLimited:
+                summary: Rate limit exceeded (generic message for security)
+                value:
+                  error: 'Registration failed. Please try again later.'
+      '409':
+        description: Username already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              duplicate:
+                summary: Username already taken
+                value:
+                  error: 'Username already exists'
+
+login:
+  post:
+    tags:
+      - Auth
+    summary: User login
+    description: |
+      Authenticate user with username and password.
+
+      **Rate Limiting:**
+      - Maximum 5 failed attempts per IP per 15 minutes
+      - Returns 401 when rate limit exceeded (same as invalid credentials to avoid information leakage)
+
+      **Security:**
+      - Returns JWT access token (expires in 1 day)
+      - Token should be included in Authorization header for protected endpoints
+    operationId: login
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/auth.yaml#/LoginRequest'
+          examples:
+            valid:
+              summary: Valid login credentials
+              value:
+                username: 'john_doe123'
+                password: 'SecurePass123!'
+    responses:
+      '200':
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/LoginResponse'
+            examples:
+              success:
+                summary: Login successful
+                value:
+                  accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+                  user:
+                    id: 1
+                    username: 'john_doe123'
+                    experience: 0
+      '401':
+        description: Invalid credentials or rate limit exceeded
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              invalid:
+                summary: Wrong username or password
+                value:
+                  error: 'Invalid username or password'
+              rateLimited:
+                summary: Rate limit exceeded (same error message for security)
+                value:
+                  error: 'Invalid username or password'
+
+logout:
+  post:
+    tags:
+      - Auth
+    summary: User logout
+    description: |
+      Logout current user and invalidate the access token.
+
+      **Token Invalidation:**
+      - Access token is added to blacklist (stored in database)
+      - Blacklist entries auto-expire when token expires
+      - After logout, token cannot be used to access protected endpoints
+
+      **Note:** Requires valid access token in Authorization header
+    operationId: logout
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: Logout successful
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/LogoutResponse'
+            examples:
+              success:
+                summary: Logout successful
+                value:
+                  message: 'Logout successful'
+      '401':
+        description: Unauthorized - invalid or missing token
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              unauthorized:
+                summary: Invalid or missing token
+                value:
+                  error: 'Unauthorized or invalid token'

@@ -1,0 +1,127 @@
+list:
+  get:
+    tags:
+      - Journeys
+    summary: Get journey list
+    description: |
+      Returns a list of all available learning journeys.
+
+      **Public Access:**
+      - No authentication required
+      - Returns journey basic information including cover image, title, and description
+
+      **Response:**
+      - Returns all journeys that are not soft-deleted
+      - Journeys are returned in creation order ((chronologically)
+    operationId: getJourneys
+    responses:
+      '200':
+        description: Successfully retrieved journey list
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - journeys
+              properties:
+                journeys:
+                  type: array
+                  items:
+                    $ref: '../schemas/journeys.yaml#/JourneyListItem'
+            examples:
+              success:
+                summary: Journey list with multiple journeys
+                value:
+                  journeys:
+                    - id: 1
+                      title: '軟體設計模式精通之旅'
+                      description: '用 C.A. 模式大大提昇系統思維能力'
+                      coverImageUrl: 'https://example.com/cover1.jpg'
+                      teacherName: '水球潘'
+                    - id: 2
+                      title: 'Web 開發入門'
+                      description: '從零開始學習網頁開發'
+                      coverImageUrl: 'https://example.com/cover2.jpg'
+                      teacherName: '林老師'
+
+detail:
+  get:
+    tags:
+      - Journeys
+    summary: Get journey details
+    description: |
+      Returns detailed information about a specific journey, including all chapters and missions.
+
+      **Public Access:**
+      - No authentication required
+      - Anyone can view journey structure and mission titles
+
+      **Response Structure:**
+      - Journey basic information
+      - List of chapters with their missions
+      - Each mission includes: id, type, title, and free preview status
+      - Mission details (video URLs, duration, content) are NOT included in this endpoint (use mission detail endpoint)
+
+      **Note:**
+      - Chapters and missions are ordered by their order_index
+      - Free preview missions are marked with isFreePreview: true
+    operationId: getJourneyDetail
+    parameters:
+      - name: journeyId
+        in: path
+        required: true
+        description: Journey ID
+        schema:
+          type: integer
+          example: 1
+    responses:
+      '200':
+        description: Successfully retrieved journey details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/journeys.yaml#/JourneyDetail'
+            examples:
+              success:
+                summary: Journey with chapters and missions
+                value:
+                  id: 1
+                  title: '軟體設計模式精通之旅'
+                  description: '用 C.A. 模式大大提昇系統思維能力'
+                  coverImageUrl: 'https://example.com/cover1.jpg'
+                  teacherName: '水球潘'
+                  chapters:
+                    - id: 1
+                      title: '課程介紹'
+                      orderIndex: 1
+                      missions:
+                        - id: 1
+                          type: 'VIDEO'
+                          title: '這門課手把手帶你成為架構設計的高手'
+                          isFreePreview: true
+                          orderIndex: 1
+                        - id: 2
+                          type: 'VIDEO'
+                          title: '你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code'
+                          isFreePreview: true
+                          orderIndex: 2
+                    - id: 2
+                      title: '架構思維的 C.A. 模式'
+                      orderIndex: 2
+                      missions:
+                        - id: 3
+                          type: 'VIDEO'
+                          title: '架構師該如何思考'
+                          isFreePreview: false
+                          orderIndex: 1
+      '404':
+        description: Journey not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              notFound:
+                summary: Journey does not exist
+                value:
+                  error: 'Journey not found'

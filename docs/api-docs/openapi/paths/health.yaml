@@ -1,0 +1,34 @@
+get:
+  tags:
+    - Health Check
+  summary: Health check endpoint
+  description: |
+    Returns the database connection health status.
+
+    Returns HTTP 200 when database is healthy, HTTP 503 when database is down.
+  operationId: checkHealth
+  responses:
+    '200':
+      description: Service is healthy
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/HealthResponse'
+          examples:
+            healthy:
+              summary: Database is healthy
+              value:
+                status: UP
+                database: UP
+    '503':
+      description: Service is unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/HealthResponse'
+          examples:
+            unhealthy:
+              summary: Database connection failed
+              value:
+                status: DOWN
+                database: DOWN

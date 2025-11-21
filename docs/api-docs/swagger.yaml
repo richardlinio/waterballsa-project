@@ -1,0 +1,125 @@
+openapi: 3.0.3
+info:
+  title: WaterBall SA Backend API
+  description: |
+    Backend API for WaterBall SA Platform
+
+    This API provides endpoints for the WaterBall SA learning platform, including health checks,
+    journey management, and user interactions.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@waterballsa.tw
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://api.waterballsa.tw
+    description: Production server
+
+tags:
+  - name: Health Check
+    description: API health monitoring endpoints
+  - name: Auth
+    description: User authentication and authorization endpoints
+  - name: Journeys
+    description: Learning journey management endpoints
+  - name: Missions
+    description: Learning mission (video/article) management endpoints
+  - name: Users
+    description: User profile and information endpoints
+
+paths:
+  /healthz:
+    $ref: './openapi/paths/health.yaml'
+
+  /auth/register:
+    $ref: './openapi/paths/auth.yaml#/register'
+
+  /auth/login:
+    $ref: './openapi/paths/auth.yaml#/login'
+
+  /auth/logout:
+    $ref: './openapi/paths/auth.yaml#/logout'
+
+  /journeys:
+    $ref: './openapi/paths/journeys.yaml#/list'
+
+  /journeys/{journeyId}:
+    $ref: './openapi/paths/journeys.yaml#/detail'
+
+  /journeys/{journeyId}/missions/{missionId}:
+    $ref: './openapi/paths/missions.yaml#/detail'
+
+  /journeys/{journeyId}/missions/{missionId}/submit:
+    $ref: './openapi/paths/missions.yaml#/submit'
+
+  /users/me:
+    $ref: './openapi/paths/users.yaml#/me'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token obtained from login endpoint.
+
+        **Usage:**
+        Include in Authorization header: `Authorization: Bearer <token>`
+
+        **Token Contents:**
+        - user_id: User identifier
+        - username: Username
+        - iat: Issued at timestamp
+        - exp: Expiration timestamp (1 day from iat)
+
+        **Security:**
+        - Tokens expire in 1 day
+        - Always use HTTPS in production
+
+  schemas:
+    # Common schemas
+    HealthResponse:
+      $ref: './openapi/schemas/common.yaml#/HealthResponse'
+    ErrorResponse:
+      $ref: './openapi/schemas/common.yaml#/ErrorResponse'
+
+    # Auth schemas
+    RegisterRequest:
+      $ref: './openapi/schemas/auth.yaml#/RegisterRequest'
+    RegisterResponse:
+      $ref: './openapi/schemas/auth.yaml#/RegisterResponse'
+    LoginRequest:
+      $ref: './openapi/schemas/auth.yaml#/LoginRequest'
+    LoginResponse:
+      $ref: './openapi/schemas/auth.yaml#/LoginResponse'
+    UserInfo:
+      $ref: './openapi/schemas/auth.yaml#/UserInfo'
+    LogoutResponse:
+      $ref: './openapi/schemas/auth.yaml#/LogoutResponse'
+
+    # Journey schemas
+    JourneyListItem:
+      $ref: './openapi/schemas/journeys.yaml#/JourneyListItem'
+    JourneyDetail:
+      $ref: './openapi/schemas/journeys.yaml#/JourneyDetail'
+    Chapter:
+      $ref: './openapi/schemas/journeys.yaml#/Chapter'
+    MissionSummary:
+      $ref: './openapi/schemas/journeys.yaml#/MissionSummary'
+
+    # Mission schemas
+    MissionDetail:
+      $ref: './openapi/schemas/missions.yaml#/MissionDetail'
+    UpdateProgressRequest:
+      $ref: './openapi/schemas/missions.yaml#/UpdateProgressRequest'
+    ProgressUpdateResponse:
+      $ref: './openapi/schemas/missions.yaml#/ProgressUpdateResponse'
+    SubmitResponse:
+      $ref: './openapi/schemas/missions.yaml#/SubmitResponse'
+
+    # User schemas
+    UserProfile:
+      $ref: './openapi/schemas/users.yaml#/UserProfile'
