@@ -44,8 +44,8 @@ paths:
   /auth/logout:
     $ref: './openapi/paths/auth.yaml#/logout'
 
-  /journeys:
-    $ref: './openapi/paths/journeys.yaml#/list'
+  # /journeys:
+  #   $ref: './openapi/paths/journeys.yaml#/list'
 
   /journeys/{journeyId}:
     $ref: './openapi/paths/journeys.yaml#/detail'
