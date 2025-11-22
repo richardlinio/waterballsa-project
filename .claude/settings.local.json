@@ -3,7 +3,9 @@
     "allow": [
       "Bash(tree:*)",
       "Bash(npx @apidevtools/swagger-cli:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(docker compose:*)"
     ],
     "deny": [],
     "ask": []

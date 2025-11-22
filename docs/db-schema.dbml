@@ -55,6 +55,7 @@ Table access_tokens {
 Table journeys {
   id bigserial [primary key]
   title varchar(200) [not null, note: '旅程標題']
+  slug varchar(200) [not null, unique, note: '旅程的 URL 友好識別符']
   description text [note: '旅程描述']
   cover_image_url varchar(500) [note: '封面圖 URL']
   teacher_name varchar(100) [not null, note: '老師名字']
@@ -65,6 +66,7 @@ Table journeys {
 
   indexes {
     title [name: 'idx_journeys_title']
+    slug [unique, name: 'idx_journeys_slug']
   }
 
   note: '學習旅程表'
