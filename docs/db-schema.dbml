@@ -94,7 +94,7 @@ Enum mission_type {
   QUESTIONNAIRE [note: '問卷任務']
 }
 
-Enum mission_status {
+Enum progress_status {
   UNCOMPLETED [note: '未完成：任務進行中或尚未開始']
   COMPLETED [note: '已完成：任務已達成完成條件但尚未交付']
   DELIVERED [note: '已交付：任務已交付並獲得獎勵']
@@ -130,7 +130,7 @@ Table user_mission_progress {
   id bigserial [primary key]
   user_id bigint [not null, ref: > users.id]
   mission_id bigint [not null, ref: > missions.id]
-  status mission_status [not null, default: 'UNCOMPLETED', note: '任務狀態：未完成/已完成/已交付']
+  status progress_status [not null, default: 'UNCOMPLETED', note: '進度狀態：未完成/已完成/已交付']
   watch_position_seconds integer [not null, default: 0, note: '影片觀看位置（秒），type=VIDEO 時使用']
 
   created_at timestamp [not null, default: `now()`]
