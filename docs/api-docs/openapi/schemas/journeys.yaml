@@ -2,6 +2,7 @@ JourneyListItem:
   type: object
   required:
     - id
+    - slug
     - title
     - description
     - coverImageUrl
@@ -11,6 +12,10 @@ JourneyListItem:
       type: integer
       description: Journey ID
       example: 1
+    slug:
+      type: string
+      description: URL-friendly identifier for the journey
+      example: 'software-design-pattern'
     title:
       type: string
       description: Journey title
@@ -33,6 +38,7 @@ JourneyDetail:
   type: object
   required:
     - id
+    - slug
     - title
     - description
     - coverImageUrl
@@ -43,6 +49,10 @@ JourneyDetail:
       type: integer
       description: Journey ID
       example: 1
+    slug:
+      type: string
+      description: URL-friendly identifier for the journey
+      example: 'software-design-pattern'
     title:
       type: string
       description: Journey title

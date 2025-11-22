@@ -252,12 +252,12 @@ paths:
         **Response Structure:**
         - Journey basic information
         - List of chapters with their missions
-        - Each mission includes: id, type, title, free preview status, and status (if authenticated)
+        - Each mission includes: id, type, title, access level, and status (if authenticated)
         - Mission details (video URLs, duration, content) are NOT included in this endpoint (use mission detail endpoint)
 
         **Note:**
         - Chapters and missions are ordered by their order_index
-        - Free preview missions are marked with isFreePreview: true
+        - Mission access levels: PUBLIC (viewable by anyone), AUTHENTICATED (requires login), PURCHASED (requires journey purchase)
         - Mission status is retrieved from user_mission_progress table (defaults to UNCOMPLETED if no progress record exists)
       operationId: getJourneyDetail
       security:
@@ -283,6 +283,7 @@ paths:
                   summary: Journey with chapters and missions (authenticated user)
                   value:
                     id: 1
+                    slug: design-patterns-mastery
                     title: 軟體設計模式精通之旅
                     description: 用 C.A. 模式大大提昇系統思維能力
                     coverImageUrl: 'https://example.com/cover1.jpg'
@@ -295,13 +296,13 @@ paths:
                           - id: 1
                             type: VIDEO
                             title: 這門課手把手帶你成為架構設計的高手
-                            isFreePreview: true
+                            accessLevel: PUBLIC
                             orderIndex: 1
                             status: DELIVERED
                           - id: 2
                             type: VIDEO
                             title: 你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code
-                            isFreePreview: true
+                            accessLevel: PUBLIC
                             orderIndex: 2
                             status: COMPLETED
                       - id: 2
@@ -311,13 +312,14 @@ paths:
                           - id: 3
                             type: VIDEO
                             title: 架構師該如何思考
-                            isFreePreview: false
+                            accessLevel: PURCHASED
                             orderIndex: 1
                             status: UNCOMPLETED
                 unauthenticated:
                   summary: Journey with chapters and missions (unauthenticated)
                   value:
                     id: 1
+                    slug: design-patterns-mastery
                     title: 軟體設計模式精通之旅
                     description: 用 C.A. 模式大大提昇系統思維能力
                     coverImageUrl: 'https://example.com/cover1.jpg'
@@ -330,13 +332,13 @@ paths:
                           - id: 1
                             type: VIDEO
                             title: 這門課手把手帶你成為架構設計的高手
-                            isFreePreview: true
+                            accessLevel: PUBLIC
                             orderIndex: 1
                             status: null
                           - id: 2
                             type: VIDEO
                             title: 你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code
-                            isFreePreview: true
+                            accessLevel: PUBLIC
                             orderIndex: 2
                             status: null
                       - id: 2
@@ -346,7 +348,7 @@ paths:
                           - id: 3
                             type: VIDEO
                             title: 架構師該如何思考
-                            isFreePreview: false
+                            accessLevel: PURCHASED
                             orderIndex: 1
                             status: null
         '404':
@@ -1140,6 +1142,7 @@ components:
       type: object
       required:
         - id
+        - slug
         - title
         - description
         - coverImageUrl
@@ -1149,6 +1152,10 @@ components:
           type: integer
           description: Journey ID
           example: 1
+        slug:
+          type: string
+          description: URL-friendly identifier for the journey
+          example: software-design-pattern
         title:
           type: string
           description: Journey title
@@ -1170,6 +1177,7 @@ components:
       type: object
       required:
         - id
+        - slug
         - title
         - description
         - coverImageUrl
@@ -1180,6 +1188,10 @@ components:
           type: integer
           description: Journey ID
           example: 1
+        slug:
+          type: string
+          description: URL-friendly identifier for the journey
+          example: software-design-pattern
         title:
           type: string
           description: Journey title
@@ -1233,7 +1245,7 @@ components:
         - id
         - type
         - title
-        - isFreePreview
+        - accessLevel
         - orderIndex
       properties:
         id:
@@ -1252,10 +1264,18 @@ components:
           type: string
           description: Mission title
           example: 這門課手把手帶你成為架構設計的高手
-        isFreePreview:
-          type: boolean
-          description: Whether this mission is free to preview
-          example: true
+        accessLevel:
+          type: string
+          enum:
+            - PUBLIC
+            - AUTHENTICATED
+            - PURCHASED
+          description: |
+            Mission access level:
+            - PUBLIC: Can be viewed without authentication
+            - AUTHENTICATED: Requires login to view
+            - PURCHASED: Requires journey purchase to view
+          example: PUBLIC
         orderIndex:
           type: integer
           description: Mission order index within the chapter
