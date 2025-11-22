@@ -64,12 +64,12 @@ detail:
       **Response Structure:**
       - Journey basic information
       - List of chapters with their missions
-      - Each mission includes: id, type, title, free preview status, and status (if authenticated)
+      - Each mission includes: id, type, title, access level, and status (if authenticated)
       - Mission details (video URLs, duration, content) are NOT included in this endpoint (use mission detail endpoint)
 
       **Note:**
       - Chapters and missions are ordered by their order_index
-      - Free preview missions are marked with isFreePreview: true
+      - Mission access levels: PUBLIC (viewable by anyone), AUTHENTICATED (requires login), PURCHASED (requires journey purchase)
       - Mission status is retrieved from user_mission_progress table (defaults to UNCOMPLETED if no progress record exists)
     operationId: getJourneyDetail
     security:
@@ -107,13 +107,13 @@ detail:
                         - id: 1
                           type: 'VIDEO'
                           title: '這門課手把手帶你成為架構設計的高手'
-                          isFreePreview: true
+                          accessLevel: 'PUBLIC'
                           orderIndex: 1
                           status: 'DELIVERED'
                         - id: 2
                           type: 'VIDEO'
                           title: '你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code'
-                          isFreePreview: true
+                          accessLevel: 'PUBLIC'
                           orderIndex: 2
                           status: 'COMPLETED'
                     - id: 2
@@ -123,7 +123,7 @@ detail:
                         - id: 3
                           type: 'VIDEO'
                           title: '架構師該如何思考'
-                          isFreePreview: false
+                          accessLevel: 'PURCHASED'
                           orderIndex: 1
                           status: 'UNCOMPLETED'
               unauthenticated:
@@ -142,13 +142,13 @@ detail:
                         - id: 1
                           type: 'VIDEO'
                           title: '這門課手把手帶你成為架構設計的高手'
-                          isFreePreview: true
+                          accessLevel: 'PUBLIC'
                           orderIndex: 1
                           status: null
                         - id: 2
                           type: 'VIDEO'
                           title: '你該知道：在 AI 的時代下，只會下 prompt 絕對寫不出好 Code'
-                          isFreePreview: true
+                          accessLevel: 'PUBLIC'
                           orderIndex: 2
                           status: null
                     - id: 2
@@ -158,7 +158,7 @@ detail:
                         - id: 3
                           type: 'VIDEO'
                           title: '架構師該如何思考'
-                          isFreePreview: false
+                          accessLevel: 'PURCHASED'
                           orderIndex: 1
                           status: null
       '404':

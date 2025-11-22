@@ -98,7 +98,7 @@ MissionSummary:
     - id
     - type
     - title
-    - isFreePreview
+    - accessLevel
     - orderIndex
   properties:
     id:
@@ -117,10 +117,18 @@ MissionSummary:
       type: string
       description: Mission title
       example: '這門課手把手帶你成為架構設計的高手'
-    isFreePreview:
-      type: boolean
-      description: Whether this mission is free to preview
-      example: true
+    accessLevel:
+      type: string
+      enum:
+        - PUBLIC
+        - AUTHENTICATED
+        - PURCHASED
+      description: |
+        Mission access level:
+        - PUBLIC: Can be viewed without authentication
+        - AUTHENTICATED: Requires login to view
+        - PURCHASED: Requires journey purchase to view
+      example: 'PUBLIC'
     orderIndex:
       type: integer
       description: Mission order index within the chapter
