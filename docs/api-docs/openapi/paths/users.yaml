@@ -57,3 +57,14 @@ me:
                 summary: Invalid or missing token
                 value:
                   error: 'Unauthorized or invalid token'
+      '404':
+        description: Not Found - user profile not found
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              notFound:
+                summary: User not found
+                value:
+                  error: 'User not found'
