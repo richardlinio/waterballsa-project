@@ -53,11 +53,11 @@ paths:
   /journeys/{journeyId}/missions/{missionId}:
     $ref: './openapi/paths/missions.yaml#/detail'
 
-  /journeys/{journeyId}/missions/{missionId}/deliver:
-    $ref: './openapi/paths/missions.yaml#/deliver'
-
   /users/{userId}/missions/{missionId}/progress:
     $ref: './openapi/paths/progress.yaml#/detail'
+
+  /users/{userId}/missions/{missionId}/progress/deliver:
+    $ref: './openapi/paths/progress.yaml#/deliver'
 
   /users/me:
     $ref: './openapi/paths/users.yaml#/me'

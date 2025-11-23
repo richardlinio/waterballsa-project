@@ -538,125 +538,6 @@ paths:
                   summary: Mission does not exist
                   value:
                     error: Mission not found
-  '/journeys/{journeyId}/missions/{missionId}/deliver':
-    post:
-      tags:
-        - Missions
-      summary: Deliver mission for experience points
-      description: |
-        Deliver a completed mission to receive experience points and change status to DELIVERED.
-
-        **Authentication:**
-        - Requires valid JWT token
-
-        **Requirements:**
-        - For VIDEO missions: Must have status COMPLETED (watched to the end)
-        - For ARTICLE/QUESTIONNAIRE missions: Can be delivered directly (no progress tracking)
-        - Cannot deliver if mission status is already DELIVERED
-        - Each mission can only be delivered once
-
-        **Effects:**
-        - Changes mission status from COMPLETED (or UNCOMPLETED for non-video) to DELIVERED
-        - Adds experience points to user (amount defined in mission rewards)
-        - Updates user level based on new experience points
-
-        **Level Calculation:**
-        - Level 1: 0-199 XP
-        - Level 2: 200-499 XP
-        - Level 3: 500-1499 XP
-        - Level 4: 1500-2999 XP
-        - Level 5: 3000-4999 XP
-        - Level 6: 5000-6999 XP
-        - Level 7+: +2000 XP per level
-        - Level 36 (max): 65000+ XP
-
-        **Note:**
-        - Experience points are only granted once per mission
-        - Duplicate deliveries return 409 Conflict
-      operationId: deliverMission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: journeyId
-          in: path
-          required: true
-          description: Journey ID
-          schema:
-            type: integer
-            example: 1
-        - name: missionId
-          in: path
-          required: true
-          description: Mission ID
-          schema:
-            type: integer
-            example: 1
-      responses:
-        '200':
-          description: Mission delivered successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeliverResponse'
-              examples:
-                success:
-                  summary: Successfully delivered and gained experience
-                  value:
-                    message: Mission delivered successfully
-                    experienceGained: 100
-                    totalExperience: 1500
-                    currentLevel: 4
-                levelUp:
-                  summary: Delivered and leveled up
-                  value:
-                    message: Mission delivered successfully
-                    experienceGained: 100
-                    totalExperience: 3000
-                    currentLevel: 5
-        '400':
-          description: Mission not completed or invalid state
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                videoNotCompleted:
-                  summary: Cannot deliver incomplete video mission
-                  value:
-                    error: Video mission must be COMPLETED before delivery
-        '401':
-          description: Unauthorized - invalid or missing token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                unauthorized:
-                  summary: Invalid or missing token
-                  value:
-                    error: Unauthorized or invalid token
-        '404':
-          description: Mission not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                notFound:
-                  summary: Mission does not exist
-                  value:
-                    error: Mission not found
-        '409':
-          description: Mission already delivered
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                duplicate:
-                  summary: Cannot deliver twice
-                  value:
-                    error: Mission has already been delivered
   '/users/{userId}/missions/{missionId}/progress':
     get:
       tags:
@@ -894,6 +775,137 @@ paths:
                   summary: Mission does not exist
                   value:
                     error: Mission not found
+  '/users/{userId}/missions/{missionId}/progress/deliver':
+    post:
+      tags:
+        - Progress
+      summary: Deliver mission for experience points
+      description: |
+        Deliver a completed mission to receive experience points and change status to DELIVERED.
+
+        **Authentication:**
+        - Requires valid JWT token
+        - User can only deliver their own progress
+
+        **Requirements:**
+        - For VIDEO missions: Must have status COMPLETED (watched to the end)
+        - For ARTICLE/QUESTIONNAIRE missions: Can be delivered directly (no progress tracking)
+        - Cannot deliver if mission status is already DELIVERED
+        - Each mission can only be delivered once
+
+        **Effects:**
+        - Changes progress status from COMPLETED (or UNCOMPLETED for non-video) to DELIVERED
+        - Adds experience points to user (amount defined in mission rewards)
+        - Updates user level based on new experience points
+
+        **Level Calculation:**
+        - Level 1: 0-199 XP
+        - Level 2: 200-499 XP
+        - Level 3: 500-1499 XP
+        - Level 4: 1500-2999 XP
+        - Level 5: 3000-4999 XP
+        - Level 6: 5000-6999 XP
+        - Level 7+: +2000 XP per level
+        - Level 36 (max): 65000+ XP
+
+        **Note:**
+        - Experience points are only granted once per mission
+        - Duplicate deliveries return 409 Conflict
+      operationId: deliverMission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+            example: 1
+        - name: missionId
+          in: path
+          required: true
+          description: Mission ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Mission delivered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliverResponse'
+              examples:
+                success:
+                  summary: Successfully delivered and gained experience
+                  value:
+                    message: Mission delivered successfully
+                    experienceGained: 100
+                    totalExperience: 1500
+                    currentLevel: 4
+                levelUp:
+                  summary: Delivered and leveled up
+                  value:
+                    message: Mission delivered successfully
+                    experienceGained: 100
+                    totalExperience: 3000
+                    currentLevel: 5
+        '400':
+          description: Mission not completed or invalid state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                videoNotCompleted:
+                  summary: Cannot deliver incomplete video mission
+                  value:
+                    error: Video mission must be COMPLETED before delivery
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Invalid or missing token
+                  value:
+                    error: Unauthorized or invalid token
+        '403':
+          description: Forbidden - cannot deliver other user's progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Cannot deliver other user's progress
+                  value:
+                    error: Cannot deliver progress for other users
+        '404':
+          description: Mission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Mission does not exist
+                  value:
+                    error: Mission not found
+        '409':
+          description: Mission already delivered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicate:
+                  summary: Cannot deliver twice
+                  value:
+                    error: Mission has already been delivered
   /users/me:
     get:
       tags:
