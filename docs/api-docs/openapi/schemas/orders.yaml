@@ -61,10 +61,12 @@ OrderResponse:
       enum:
         - UNPAID
         - PAID
+        - EXPIRED
       description: |
         Order status:
         - UNPAID: Order created but not yet paid
         - PAID: Payment completed, user has journey access
+        - EXPIRED: Order expired after 3 days without payment, cannot be paid
       example: 'UNPAID'
     originalPrice:
       type: number
@@ -91,6 +93,12 @@ OrderResponse:
       format: int64
       description: Order creation timestamp (milliseconds since epoch)
       example: 1732420800000
+    expiredAt:
+      type: integer
+      format: int64
+      description: Order expiration timestamp (created_at + 3 days, null if already paid)
+      example: 1732680000000
+      nullable: true
     paidAt:
       type: integer
       format: int64
@@ -212,6 +220,7 @@ OrderSummary:
       enum:
         - UNPAID
         - PAID
+        - EXPIRED
       description: Order status
       example: 'UNPAID'
     price:
@@ -229,6 +238,12 @@ OrderSummary:
       format: int64
       description: Order creation timestamp
       example: 1732420800000
+    expiredAt:
+      type: integer
+      format: int64
+      description: Order expiration timestamp (created_at + 3 days, null if already paid)
+      example: 1732680000000
+      nullable: true
     paidAt:
       type: integer
       format: int64

@@ -7,6 +7,7 @@ JourneyListItem:
     - description
     - coverImageUrl
     - teacherName
+    - price
   properties:
     id:
       type: integer
@@ -33,6 +34,10 @@ JourneyListItem:
       type: string
       description: Teacher name
       example: '水球潘'
+    price:
+      type: integer
+      description: Journey price in TWD (New Taiwan Dollar)
+      example: 3990
 
 JourneyDetail:
   type: object
@@ -43,6 +48,7 @@ JourneyDetail:
     - description
     - coverImageUrl
     - teacherName
+    - price
     - chapters
   properties:
     id:
@@ -70,6 +76,10 @@ JourneyDetail:
       type: string
       description: Teacher name
       example: '水球潘'
+    price:
+      type: integer
+      description: Journey price in TWD (New Taiwan Dollar)
+      example: 3990
     chapters:
       type: array
       description: List of chapters in this journey

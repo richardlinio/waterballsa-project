@@ -17,6 +17,8 @@ create:
         - Example: `20251121011117cd5` = `2025112101` (timestamp) + `11` (userId) + `17cd5` (random code)
       - Journey price is locked at order creation time (from journeys.price)
       - Order status defaults to UNPAID
+      - Order expiration time is set to created_at + 3 days
+      - Orders automatically expire after 3 days if not paid (status changes to EXPIRED)
 
       **Next Steps:**
       - Frontend should redirect to order payment page
@@ -64,6 +66,7 @@ create:
                       discount: 0.00
                       price: 7599.00
                   createdAt: 1732420800000
+                  expiredAt: 1732680000000
                   paidAt: null
       '200':
         description: User already has an unpaid order for this journey, returning existing order
@@ -91,6 +94,7 @@ create:
                       discount: 0.00
                       price: 7599.00
                   createdAt: 1732334400000
+                  expiredAt: 1732593600000
                   paidAt: null
       '400':
         description: Bad request - invalid journey ID
@@ -196,6 +200,7 @@ detail:
                       discount: 0.00
                       price: 7599.00
                   createdAt: 1732420800000
+                  expiredAt: 1732680000000
                   paidAt: null
               paid:
                 summary: Paid order
@@ -216,7 +221,29 @@ detail:
                       discount: 0.00
                       price: 7599.00
                   createdAt: 1732420800000
+                  expiredAt: null
                   paidAt: 1732507200000
+              expired:
+                summary: Expired order
+                value:
+                  id: 124
+                  orderNumber: '20251118011117xyz'
+                  userId: 11
+                  username: 'john_doe'
+                  status: 'EXPIRED'
+                  originalPrice: 7599.00
+                  discount: 0.00
+                  price: 7599.00
+                  items:
+                    - journeyId: 17
+                      journeyTitle: 'AI x BDD：規格驅動全自動開發術'
+                      quantity: 1
+                      originalPrice: 7599.00
+                      discount: 0.00
+                      price: 7599.00
+                  createdAt: 1732161600000
+                  expiredAt: 1732420800000
+                  paidAt: null
       '401':
         description: Unauthorized - user not logged in
         content:
@@ -253,7 +280,7 @@ pay:
       - User can only pay for their own orders
 
       **Business Logic:**
-      - Order status must be UNPAID
+      - Order status must be UNPAID (EXPIRED orders cannot be paid)
       - After successful payment:
         - Order status changes to PAID
         - paid_at timestamp is set
@@ -314,7 +341,7 @@ pay:
                 value:
                   error: 'Order not found'
       '409':
-        description: Conflict - order is already paid
+        description: Conflict - order is already paid or expired
         content:
           application/json:
             schema:
@@ -324,3 +351,7 @@ pay:
                 summary: Order already completed
                 value:
                   error: '訂單已付款'
+              expired:
+                summary: Order has expired
+                value:
+                  error: '訂單已過期'
