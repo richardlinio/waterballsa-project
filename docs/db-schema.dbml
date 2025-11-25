@@ -208,6 +208,7 @@ Table mission_contents {
 Enum order_status {
   UNPAID [note: '未付款：訂單已建立但尚未付款']
   PAID [note: '已付款：付款完成']
+  EXPIRED [note: '已過期：訂單建立三天後未付款自動過期']
 }
 
 Table orders {
@@ -219,6 +220,7 @@ Table orders {
   discount decimal(10,2) [not null, default: 0, note: '折扣金額']
   price decimal(10,2) [not null, note: '實際應付金額（original_price - discount）']
   created_at timestamp [not null, default: `now()`, note: '訂單建立時間']
+  expired_at timestamp [null, note: '訂單過期時間（建立時設為 created_at + 3天）']
   paid_at timestamp [null, note: '付款完成時間']
   updated_at timestamp [not null, default: `now()`]
   deleted_at timestamp [null, note: '軟刪除時間戳']
@@ -229,6 +231,7 @@ Table orders {
     (user_id, status) [name: 'idx_orders_user_status', note: '查詢使用者的訂單狀態']
     status [name: 'idx_orders_status']
     created_at [name: 'idx_orders_created_at']
+    expired_at [name: 'idx_orders_expired_at', note: '用於排程任務查詢過期訂單']
   }
 
   note: '訂單主表，記錄訂單基本資訊與總價'
