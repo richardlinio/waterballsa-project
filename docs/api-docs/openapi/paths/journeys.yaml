@@ -2,21 +2,21 @@ list:
   get:
     tags:
       - Journeys
-    summary: Get journey list
+    summary: 取得旅程列表
     description: |
-      Returns a list of all available learning journeys.
+      回傳所有可用學習旅程的列表。
 
-      **Public Access:**
-      - No authentication required
-      - Returns journey basic information including cover image, title, and description
+      **公開存取：**
+      - 不需要身分驗證
+      - 回傳旅程基本資訊，包括封面圖片、標題和描述
 
-      **Response:**
-      - Returns all journeys that are not soft-deleted
-      - Journeys are returned in creation order ((chronologically)
+      **回應：**
+      - 回傳所有未被軟刪除的旅程
+      - 旅程按建立順序回傳（按時間順序）
     operationId: getJourneys
     responses:
       '200':
-        description: Successfully retrieved journey list
+        description: 成功取得旅程列表
         content:
           application/json:
             schema:
@@ -30,7 +30,7 @@ list:
                     $ref: '../schemas/journeys.yaml#/JourneyListItem'
             examples:
               success:
-                summary: Journey list with multiple journeys
+                summary: 包含多個旅程的旅程列表
                 value:
                   journeys:
                     - id: 1
@@ -50,29 +50,29 @@ detail:
   get:
     tags:
       - Journeys
-    summary: Get journey details
+    summary: 取得旅程詳情
     description: |
-      Returns detailed information about a specific journey, including all chapters and missions.
+      回傳特定旅程的詳細資訊，包括所有章節和任務。
 
-      **Public Access:**
-      - No authentication required
-      - Anyone can view journey structure and mission titles
+      **公開存取：**
+      - 不需要身分驗證
+      - 任何人都可以查看旅程結構和任務標題
 
-      **Authentication (Optional):**
-      - If JWT token is provided, response will include mission status for the authenticated user
-      - Mission status shows progress: UNCOMPLETED, COMPLETED, or DELIVERED
-      - Without authentication, status field will be null
+      **身分驗證（選填）：**
+      - 如果提供 JWT 權杖，回應會包含已驗證使用者的任務狀態
+      - 任務狀態顯示進度：UNCOMPLETED、COMPLETED 或 DELIVERED
+      - 沒有身分驗證時，狀態欄位將為 null
 
-      **Response Structure:**
-      - Journey basic information
-      - List of chapters with their missions
-      - Each mission includes: id, type, title, access level, and status (if authenticated)
-      - Mission details (video URLs, duration, content) are NOT included in this endpoint (use mission detail endpoint)
+      **回應結構：**
+      - 旅程基本資訊
+      - 章節列表及其任務
+      - 每個任務包括：id、類型、標題、存取等級和狀態（如果已驗證）
+      - 此端點不包含任務詳情（影片網址、時長、內容）（請使用任務詳情端點）
 
-      **Note:**
-      - Chapters and missions are ordered by their order_index
-      - Mission access levels: PUBLIC (viewable by anyone), AUTHENTICATED (requires login), PURCHASED (requires journey purchase)
-      - Mission status is retrieved from user_mission_progress table (defaults to UNCOMPLETED if no progress record exists)
+      **注意：**
+      - 章節和任務按 order_index 排序
+      - 任務存取等級：PUBLIC（任何人可查看）、AUTHENTICATED（需要登入）、PURCHASED（需要購買旅程）
+      - 任務狀態從 user_mission_progress 資料表取得（如果沒有進度記錄則預設為 UNCOMPLETED）
     operationId: getJourneyDetail
     security:
       - bearerAuth: []
@@ -81,20 +81,20 @@ detail:
       - name: journeyId
         in: path
         required: true
-        description: Journey ID
+        description: 旅程 ID
         schema:
           type: integer
           example: 1
     responses:
       '200':
-        description: Successfully retrieved journey details
+        description: 成功取得旅程詳情
         content:
           application/json:
             schema:
               $ref: '../schemas/journeys.yaml#/JourneyDetail'
             examples:
               authenticated:
-                summary: Journey with chapters and missions (authenticated user)
+                summary: 包含章節和任務的旅程（已驗證使用者）
                 value:
                   id: 1
                   slug: 'design-patterns-mastery'
@@ -134,7 +134,7 @@ detail:
                           orderIndex: 1
                           status: 'UNCOMPLETED'
               authenticatedWithUnpaidOrder:
-                summary: User has unpaid order for this journey
+                summary: 使用者有此旅程的未付款訂單
                 value:
                   id: 1
                   slug: 'design-patterns-mastery'
@@ -168,7 +168,7 @@ detail:
                           orderIndex: 1
                           status: 'UNCOMPLETED'
               authenticatedNotPurchased:
-                summary: User logged in but has not purchased this journey
+                summary: 使用者已登入但尚未購買此旅程
                 value:
                   id: 1
                   slug: 'design-patterns-mastery'
@@ -202,7 +202,7 @@ detail:
                           orderIndex: 1
                           status: 'UNCOMPLETED'
               unauthenticated:
-                summary: Journey with chapters and missions (unauthenticated)
+                summary: 包含章節和任務的旅程（未驗證）
                 value:
                   id: 1
                   slug: 'design-patterns-mastery'
@@ -239,13 +239,13 @@ detail:
                           orderIndex: 1
                           status: null
       '404':
-        description: Journey not found
+        description: 找不到旅程
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: Journey does not exist
+                summary: 旅程不存在
                 value:
-                  error: 'Journey not found'
+                  error: '找不到旅程'

@@ -9,22 +9,22 @@ UserProfile:
   properties:
     id:
       type: integer
-      description: User ID
+      description: 使用者 ID
       example: 1
     username:
       type: string
-      description: Username
+      description: 使用者名稱
       example: 'john_doe123'
     experiencePoints:
       type: integer
       minimum: 0
-      description: Total accumulated experience points
+      description: 累積的總經驗值
       example: 1500
     level:
       type: integer
       minimum: 1
       maximum: 36
-      description: Current level (1-36)
+      description: 目前等級（1-36）
       example: 4
     role:
       type: string
@@ -32,7 +32,7 @@ UserProfile:
         - STUDENT
         - TEACHER
         - ADMIN
-      description: User role
+      description: 使用者角色
       example: 'STUDENT'
 
 UserJourneyListResponse:
@@ -42,7 +42,7 @@ UserJourneyListResponse:
   properties:
     journeys:
       type: array
-      description: List of journeys the user has purchased
+      description: 使用者已購買的旅程列表
       items:
         $ref: '#/UserJourneyItem'
 
@@ -59,31 +59,31 @@ UserJourneyItem:
   properties:
     journeyId:
       type: integer
-      description: Journey ID
+      description: 旅程 ID
       example: 17
     journeyTitle:
       type: string
-      description: Journey title
+      description: 旅程標題
       example: 'AI x BDD：規格驅動全自動開發術'
     journeySlug:
       type: string
-      description: URL-friendly journey identifier
+      description: 旅程的 URL 友善識別碼
       example: 'ai-bdd-spec-driven-development'
     coverImageUrl:
       type: string
       format: uri
-      description: Journey cover image URL
+      description: 旅程封面圖片 URL
       example: 'https://example.com/covers/ai-bdd.jpg'
     teacherName:
       type: string
-      description: Teacher name
+      description: 教師名稱
       example: '水球潘'
     purchasedAt:
       type: integer
       format: int64
-      description: Purchase timestamp - when the order was paid (milliseconds since epoch)
+      description: 購買時間戳記 - 訂單付款完成時間（自紀元以來的毫秒數）
       example: 1732507200000
     orderNumber:
       type: string
-      description: Order number that granted access to this journey
+      description: 授予此旅程存取權的訂單編號
       example: '20251121011117cd5'

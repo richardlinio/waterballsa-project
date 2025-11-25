@@ -1,34 +1,34 @@
 get:
   tags:
     - Health Check
-  summary: Health check endpoint
+  summary: 健康檢查端點
   description: |
-    Returns the database connection health status.
+    回傳資料庫連線健康狀態。
 
-    Returns HTTP 200 when database is healthy, HTTP 503 when database is down.
+    當資料庫健康時回傳 HTTP 200，當資料庫故障時回傳 HTTP 503。
   operationId: checkHealth
   responses:
     '200':
-      description: Service is healthy
+      description: 服務正常
       content:
         application/json:
           schema:
             $ref: '../schemas/common.yaml#/HealthResponse'
           examples:
             healthy:
-              summary: Database is healthy
+              summary: 資料庫健康
               value:
                 status: UP
                 database: UP
     '503':
-      description: Service is unavailable
+      description: 服務無法使用
       content:
         application/json:
           schema:
             $ref: '../schemas/common.yaml#/HealthResponse'
           examples:
             unhealthy:
-              summary: Database connection failed
+              summary: 資料庫連線失敗
               value:
                 status: DOWN
                 database: DOWN

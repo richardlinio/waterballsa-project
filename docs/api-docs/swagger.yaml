@@ -1,39 +1,39 @@
 openapi: 3.0.3
 info:
-  title: WaterBall SA Backend API
+  title: WaterBall SA 後端 API
   description: |
-    Backend API for WaterBall SA Platform
+    WaterBall SA 平台後端 API
 
-    This API provides endpoints for the WaterBall SA learning platform, including health checks,
-    journey management, and user interactions.
+    此 API 提供 WaterBall SA 學習平台的端點，包括健康檢查、
+    旅程管理和使用者互動。
   version: 1.0.0
   contact:
-    name: API Support
+    name: API 支援
     email: support@waterballsa.tw
 
 servers:
   - url: http://localhost:8080
-    description: Development server
+    description: 開發伺服器
   - url: https://api.waterballsa.tw
-    description: Production server
+    description: 正式環境伺服器
 
 tags:
   - name: Health Check
-    description: API health monitoring endpoints
+    description: API 健康監控端點
   - name: Auth
-    description: User authentication and authorization endpoints
+    description: 使用者認證與授權端點
   - name: Journeys
-    description: Learning journey management endpoints
+    description: 學習旅程管理端點
   - name: Missions
-    description: Learning mission (video/article/questionnaire) management endpoints
+    description: 學習任務（影片/文章/問卷）管理端點
   - name: Progress
-    description: User mission progress tracking endpoints
+    description: 使用者任務進度追蹤端點
   - name: Users
-    description: User profile and information endpoints
+    description: 使用者個人資料與資訊端點
   - name: Orders
-    description: Course purchase order management endpoints
+    description: 課程購買訂單管理端點
   - name: User Journeys
-    description: User purchased journey access management endpoints
+    description: 使用者已購買旅程存取管理端點
 
 paths:
   /healthz:
@@ -88,20 +88,20 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        JWT access token obtained from login endpoint.
+        從登入端點取得的 JWT 存取權杖。
 
-        **Usage:**
-        Include in Authorization header: `Authorization: Bearer <token>`
+        **使用方式：**
+        包含在 Authorization 標頭中：`Authorization: Bearer <token>`
 
-        **Token Contents:**
-        - user_id: User identifier
-        - username: Username
-        - iat: Issued at timestamp
-        - exp: Expiration timestamp (1 day from iat)
+        **權杖內容：**
+        - user_id：使用者識別碼
+        - username：使用者名稱
+        - iat：簽發時間戳記
+        - exp：過期時間戳記（簽發後 1 天）
 
-        **Security:**
-        - Tokens expire in 1 day
-        - Always use HTTPS in production
+        **安全性：**
+        - 權杖在 1 天後過期
+        - 正式環境務必使用 HTTPS
 
   schemas:
     # Common schemas

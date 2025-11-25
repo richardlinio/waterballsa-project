@@ -9,14 +9,14 @@ RegisterRequest:
       minLength: 3
       maxLength: 50
       pattern: '^[a-zA-Z0-9_]+$'
-      description: Username (alphanumeric and underscore only)
+      description: 使用者名稱（僅限英數字和底線）
       example: 'john_doe123'
     password:
       type: string
       minLength: 8
       maxLength: 72
       pattern: '^[a-zA-Z0-9@$!%*?&#]+$'
-      description: Password (alphanumeric and special characters, 8-72 characters)
+      description: 密碼（英數字和特殊字元，8-72 個字元）
       example: 'SecurePass123!'
 
 RegisterResponse:
@@ -27,11 +27,11 @@ RegisterResponse:
   properties:
     message:
       type: string
-      description: Success message
+      description: 成功訊息
       example: 'Registration successful'
     userId:
       type: integer
-      description: Newly created user ID
+      description: 新建立的使用者 ID
       example: 1
 
 LoginRequest:
@@ -42,11 +42,11 @@ LoginRequest:
   properties:
     username:
       type: string
-      description: Username
+      description: 使用者名稱
       example: 'john_doe123'
     password:
       type: string
-      description: Password
+      description: 密碼
       example: 'SecurePass123!'
 
 LoginResponse:
@@ -57,7 +57,7 @@ LoginResponse:
   properties:
     accessToken:
       type: string
-      description: JWT access token (expires in 1 day)
+      description: JWT 存取權杖（1 天後過期）
       example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     user:
       $ref: '#/UserInfo'
@@ -71,16 +71,16 @@ UserInfo:
   properties:
     id:
       type: integer
-      description: User ID
+      description: 使用者 ID
       example: 1
     username:
       type: string
-      description: Username
+      description: 使用者名稱
       example: 'john_doe123'
     experience:
       type: integer
       minimum: 0
-      description: User experience points
+      description: 使用者經驗值
       example: 0
 
 LogoutResponse:
@@ -90,5 +90,5 @@ LogoutResponse:
   properties:
     message:
       type: string
-      description: Success message
+      description: 成功訊息
       example: 'Logout successful'

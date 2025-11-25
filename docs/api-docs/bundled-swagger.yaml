@@ -1,70 +1,70 @@
 openapi: 3.0.3
 info:
-  title: WaterBall SA Backend API
+  title: WaterBall SA 後端 API
   description: |
-    Backend API for WaterBall SA Platform
+    WaterBall SA 平台後端 API
 
-    This API provides endpoints for the WaterBall SA learning platform, including health checks,
-    journey management, and user interactions.
+    此 API 提供 WaterBall SA 學習平台的端點，包括健康檢查、
+    旅程管理和使用者互動。
   version: 1.0.0
   contact:
-    name: API Support
+    name: API 支援
     email: support@waterballsa.tw
 servers:
   - url: 'http://localhost:8080'
-    description: Development server
+    description: 開發伺服器
   - url: 'https://api.waterballsa.tw'
-    description: Production server
+    description: 正式環境伺服器
 tags:
   - name: Health Check
-    description: API health monitoring endpoints
+    description: API 健康監控端點
   - name: Auth
-    description: User authentication and authorization endpoints
+    description: 使用者認證與授權端點
   - name: Journeys
-    description: Learning journey management endpoints
+    description: 學習旅程管理端點
   - name: Missions
-    description: Learning mission (video/article/questionnaire) management endpoints
+    description: 學習任務（影片/文章/問卷）管理端點
   - name: Progress
-    description: User mission progress tracking endpoints
+    description: 使用者任務進度追蹤端點
   - name: Users
-    description: User profile and information endpoints
+    description: 使用者個人資料與資訊端點
   - name: Orders
-    description: Course purchase order management endpoints
+    description: 課程購買訂單管理端點
   - name: User Journeys
-    description: User purchased journey access management endpoints
+    description: 使用者已購買旅程存取管理端點
 paths:
   /healthz:
     get:
       tags:
         - Health Check
-      summary: Health check endpoint
+      summary: 健康檢查端點
       description: |
-        Returns the database connection health status.
+        回傳資料庫連線健康狀態。
 
-        Returns HTTP 200 when database is healthy, HTTP 503 when database is down.
+        當資料庫健康時回傳 HTTP 200，當資料庫故障時回傳 HTTP 503。
       operationId: checkHealth
       responses:
         '200':
-          description: Service is healthy
+          description: 服務正常
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
               examples:
                 healthy:
-                  summary: Database is healthy
+                  summary: 資料庫健康
                   value:
                     status: UP
                     database: UP
         '503':
-          description: Service is unavailable
+          description: 服務無法使用
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
               examples:
                 unhealthy:
-                  summary: Database connection failed
+                  summary: 資料庫連線失敗
                   value:
                     status: DOWN
                     database: DOWN
@@ -72,19 +72,19 @@ paths:
     post:
       tags:
         - Auth
-      summary: User registration
+      summary: 使用者註冊
       description: |
-        Register a new user with username and password.
+        使用帳號與密碼註冊新使用者。
 
-        **Rate Limiting:**
-        - Maximum 5 registrations per IP per hour
-        - Returns 400 with generic error message when rate limit exceeded (avoids information leakage)
+        **速率限制：**
+        - 每個 IP 每小時最多 5 次註冊
+        - 超過速率限制時回傳 400 與通用錯誤訊息（避免資訊洩漏）
 
-        **Validation:**
-        - Username and password must be alphanumeric with special characters allowed
-        - Both have length limits
-        - Initial experience points set to 0
-        - Redirects to login page on success
+        **驗證規則：**
+        - 使用者名稱和密碼必須為英數字元，允許特殊字元
+        - 兩者都有長度限制
+        - 初始經驗值設為 0
+        - 成功後重新導向至登入頁面
       operationId: register
       requestBody:
         required: true
@@ -94,64 +94,64 @@ paths:
               $ref: '#/components/schemas/RegisterRequest'
             examples:
               valid:
-                summary: Valid registration
+                summary: 有效的註冊
                 value:
                   username: john_doe123
                   password: SecurePass123!
       responses:
         '201':
-          description: User registered successfully
+          description: 使用者註冊成功
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegisterResponse'
               examples:
                 success:
-                  summary: Registration successful
+                  summary: 註冊成功
                   value:
-                    message: Registration successful
+                    message: 註冊成功
                     userId: 1
         '400':
-          description: Invalid request data or rate limit exceeded
+          description: 請求資料無效或超過速率限制
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalidFormat:
-                  summary: Invalid username or password format
+                  summary: 使用者名稱或密碼格式無效
                   value:
-                    error: Invalid username or password format
+                    error: 使用者名稱或密碼格式無效
                 rateLimited:
-                  summary: Rate limit exceeded (generic message for security)
+                  summary: 超過速率限制（基於安全性的通用訊息）
                   value:
-                    error: Registration failed. Please try again later.
+                    error: 註冊失敗。請稍後再試。
         '409':
-          description: Username already exists
+          description: 使用者名稱已存在
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 duplicate:
-                  summary: Username already taken
+                  summary: 使用者名稱已被使用
                   value:
-                    error: Username already exists
+                    error: 使用者名稱已存在
   /auth/login:
     post:
       tags:
         - Auth
-      summary: User login
+      summary: 使用者登入
       description: |
-        Authenticate user with username and password.
+        使用帳號與密碼進行使用者身分驗證。
 
-        **Rate Limiting:**
-        - Maximum 5 failed attempts per IP per 15 minutes
-        - Returns 401 when rate limit exceeded (same as invalid credentials to avoid information leakage)
+        **速率限制：**
+        - 每個 IP 每 15 分鐘最多 5 次失敗嘗試
+        - 超過速率限制時回傳 401（與無效憑證相同以避免資訊洩漏）
 
-        **Security:**
-        - Returns JWT access token (expires in 1 day)
-        - Token should be included in Authorization header for protected endpoints
+        **安全性：**
+        - 回傳 JWT 存取權杖（1 天後過期）
+        - 權杖應包含在受保護端點的 Authorization 標頭中
       operationId: login
       requestBody:
         required: true
@@ -161,20 +161,20 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
             examples:
               valid:
-                summary: Valid login credentials
+                summary: 有效的登入憑證
                 value:
                   username: john_doe123
                   password: SecurePass123!
       responses:
         '200':
-          description: Login successful
+          description: 登入成功
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
               examples:
                 success:
-                  summary: Login successful
+                  summary: 登入成功
                   value:
                     accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                     user:
@@ -182,79 +182,79 @@ paths:
                       username: john_doe123
                       experience: 0
         '401':
-          description: Invalid credentials or rate limit exceeded
+          description: 憑證無效或超過速率限制
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalid:
-                  summary: Wrong username or password
+                  summary: 錯誤的使用者名稱或密碼
                   value:
-                    error: Invalid username or password
+                    error: 使用者名稱或密碼無效
                 rateLimited:
-                  summary: Rate limit exceeded (same error message for security)
+                  summary: 超過速率限制（基於安全性使用相同錯誤訊息）
                   value:
-                    error: Invalid username or password
+                    error: 使用者名稱或密碼無效
   /auth/logout:
     post:
       tags:
         - Auth
-      summary: User logout
+      summary: 使用者登出
       description: |
-        Logout current user and invalidate the access token.
+        登出目前使用者並使存取權杖失效。
 
-        **Token Invalidation:**
-        - Access token is added to blacklist (stored in database)
-        - Blacklist entries auto-expire when token expires
-        - After logout, token cannot be used to access protected endpoints
+        **權杖失效化：**
+        - 存取權杖會被加入黑名單（儲存在資料庫中）
+        - 黑名單項目會在權杖過期時自動過期
+        - 登出後，權杖無法用於存取受保護的端點
 
-        **Note:** Requires valid access token in Authorization header
+        **注意：** 需要在 Authorization 標頭中提供有效的存取權杖
       operationId: logout
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Logout successful
+          description: 登出成功
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogoutResponse'
               examples:
                 success:
-                  summary: Logout successful
+                  summary: 登出成功
                   value:
-                    message: Logout successful
+                    message: 登出成功
         '401':
-          description: Unauthorized - invalid or missing token
+          description: 未授權 - 權杖無效或遺失
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: Invalid or missing token
+                  summary: 權杖無效或遺失
                   value:
-                    error: Unauthorized or invalid token
+                    error: 未授權或權杖無效
   /journeys:
     get:
       tags:
         - Journeys
-      summary: Get journey list
+      summary: 取得旅程列表
       description: |
-        Returns a list of all available learning journeys.
+        回傳所有可用學習旅程的列表。
 
-        **Public Access:**
-        - No authentication required
-        - Returns journey basic information including cover image, title, and description
+        **公開存取：**
+        - 不需要身分驗證
+        - 回傳旅程基本資訊，包括封面圖片、標題和描述
 
-        **Response:**
-        - Returns all journeys that are not soft-deleted
-        - Journeys are returned in creation order ((chronologically)
+        **回應：**
+        - 回傳所有未被軟刪除的旅程
+        - 旅程按建立順序回傳（按時間順序）
       operationId: getJourneys
       responses:
         '200':
-          description: Successfully retrieved journey list
+          description: 成功取得旅程列表
           content:
             application/json:
               schema:
@@ -268,7 +268,7 @@ paths:
                       $ref: '#/components/schemas/JourneyListItem'
               examples:
                 success:
-                  summary: Journey list with multiple journeys
+                  summary: 包含多個旅程的旅程列表
                   value:
                     journeys:
                       - id: 1
@@ -287,29 +287,29 @@ paths:
     get:
       tags:
         - Journeys
-      summary: Get journey details
+      summary: 取得旅程詳情
       description: |
-        Returns detailed information about a specific journey, including all chapters and missions.
+        回傳特定旅程的詳細資訊，包括所有章節和任務。
 
-        **Public Access:**
-        - No authentication required
-        - Anyone can view journey structure and mission titles
+        **公開存取：**
+        - 不需要身分驗證
+        - 任何人都可以查看旅程結構和任務標題
 
-        **Authentication (Optional):**
-        - If JWT token is provided, response will include mission status for the authenticated user
-        - Mission status shows progress: UNCOMPLETED, COMPLETED, or DELIVERED
-        - Without authentication, status field will be null
+        **身分驗證（選填）：**
+        - 如果提供 JWT 權杖，回應會包含已驗證使用者的任務狀態
+        - 任務狀態顯示進度：UNCOMPLETED、COMPLETED 或 DELIVERED
+        - 沒有身分驗證時，狀態欄位將為 null
 
-        **Response Structure:**
-        - Journey basic information
-        - List of chapters with their missions
-        - Each mission includes: id, type, title, access level, and status (if authenticated)
-        - Mission details (video URLs, duration, content) are NOT included in this endpoint (use mission detail endpoint)
+        **回應結構：**
+        - 旅程基本資訊
+        - 章節列表及其任務
+        - 每個任務包括：id、類型、標題、存取等級和狀態（如果已驗證）
+        - 此端點不包含任務詳情（影片網址、時長、內容）（請使用任務詳情端點）
 
-        **Note:**
-        - Chapters and missions are ordered by their order_index
-        - Mission access levels: PUBLIC (viewable by anyone), AUTHENTICATED (requires login), PURCHASED (requires journey purchase)
-        - Mission status is retrieved from user_mission_progress table (defaults to UNCOMPLETED if no progress record exists)
+        **注意：**
+        - 章節和任務按 order_index 排序
+        - 任務存取等級：PUBLIC（任何人可查看）、AUTHENTICATED（需要登入）、PURCHASED（需要購買旅程）
+        - 任務狀態從 user_mission_progress 資料表取得（如果沒有進度記錄則預設為 UNCOMPLETED）
       operationId: getJourneyDetail
       security:
         - bearerAuth: []
@@ -318,20 +318,20 @@ paths:
         - name: journeyId
           in: path
           required: true
-          description: Journey ID
+          description: 旅程 ID
           schema:
             type: integer
             example: 1
       responses:
         '200':
-          description: Successfully retrieved journey details
+          description: 成功取得旅程詳情
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/JourneyDetail'
               examples:
                 authenticated:
-                  summary: Journey with chapters and missions (authenticated user)
+                  summary: 包含章節和任務的旅程（已驗證使用者）
                   value:
                     id: 1
                     slug: design-patterns-mastery
@@ -371,7 +371,7 @@ paths:
                             orderIndex: 1
                             status: UNCOMPLETED
                 authenticatedWithUnpaidOrder:
-                  summary: User has unpaid order for this journey
+                  summary: 使用者有此旅程的未付款訂單
                   value:
                     id: 1
                     slug: design-patterns-mastery
@@ -405,7 +405,7 @@ paths:
                             orderIndex: 1
                             status: UNCOMPLETED
                 authenticatedNotPurchased:
-                  summary: User logged in but has not purchased this journey
+                  summary: 使用者已登入但尚未購買此旅程
                   value:
                     id: 1
                     slug: design-patterns-mastery
@@ -439,7 +439,7 @@ paths:
                             orderIndex: 1
                             status: UNCOMPLETED
                 unauthenticated:
-                  summary: Journey with chapters and missions (unauthenticated)
+                  summary: 包含章節和任務的旅程（未驗證）
                   value:
                     id: 1
                     slug: design-patterns-mastery
@@ -476,44 +476,44 @@ paths:
                             orderIndex: 1
                             status: null
         '404':
-          description: Journey not found
+          description: 找不到旅程
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: Journey does not exist
+                  summary: 旅程不存在
                   value:
-                    error: Journey not found
+                    error: 找不到旅程
   '/journeys/{journeyId}/missions/{missionId}':
     get:
       tags:
         - Missions
-      summary: Get mission details
+      summary: 取得任務詳細資訊
       description: |
-        Returns detailed information about a specific mission including content and rewards.
+        回傳特定任務的詳細資訊，包括內容和獎勵。
 
-        **Note:** This endpoint does NOT include user progress. Use GET /users/{userId}/missions/{missionId}/progress for progress information.
+        **注意：** 此端點不包含使用者進度。請使用 GET /users/{userId}/missions/{missionId}/progress 來取得進度資訊。
 
-        **Authentication:**
-        - Requires valid JWT token
+        **認證：**
+        - 需要有效的 JWT token
 
-        **Response Includes:**
-        - Mission basic information (id, chapterId, journeyId, type, title, description)
-        - Content array (can have multiple content items like videos, articles, forms)
-        - Reward information (experience points)
-        - Free preview flag
-        - Creation timestamp
+        **回應包含：**
+        - 任務基本資訊（id、chapterId、journeyId、type、title、description）
+        - 內容陣列（可包含多個內容項目，如影片、文章、表單）
+        - 獎勵資訊（經驗值）
+        - 免費預覽標記
+        - 建立時間戳記
 
-        **Content Structure:**
-        - Each mission can have multiple content items
-        - Content types: video, article, form
-        - Videos include durationSeconds field
+        **內容結構：**
+        - 每個任務可以有多個內容項目
+        - 內容類型：video、article、form
+        - 影片包含 durationSeconds 欄位
 
-        **Free Preview:**
-        - All users can access missions with isFreePreview: true
-        - Other missions require journey purchase (MVP: all accessible)
+        **免費預覽：**
+        - 所有使用者都可以存取 isFreePreview: true 的任務
+        - 其他任務需要購買旅程（MVP：全部可存取）
       operationId: getMissionDetail
       security:
         - bearerAuth: []
@@ -521,27 +521,27 @@ paths:
         - name: journeyId
           in: path
           required: true
-          description: Journey ID
+          description: 旅程 ID
           schema:
             type: integer
             example: 1
         - name: missionId
           in: path
           required: true
-          description: Mission ID
+          description: 任務 ID
           schema:
             type: integer
             example: 1
       responses:
         '200':
-          description: Successfully retrieved mission details
+          description: 成功取得任務詳細資訊
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MissionDetail'
               examples:
                 videoMission:
-                  summary: Video mission example
+                  summary: 影片任務範例
                   value:
                     id: 1
                     chapterId: 8
@@ -560,7 +560,7 @@ paths:
                         url: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
                         durationSeconds: 256
                 articleMission:
-                  summary: Article mission example
+                  summary: 文章任務範例
                   value:
                     id: 5
                     chapterId: 10
@@ -577,7 +577,7 @@ paths:
                         type: article
                         url: 'https://cdn.waterballsa.tw/articles/uml-intro.html'
                 questionnaireMission:
-                  summary: Questionnaire mission example
+                  summary: 問卷任務範例
                   value:
                     id: 7
                     chapterId: 12
@@ -594,50 +594,50 @@ paths:
                         type: form
                         url: 'https://forms.waterballsa.tw/feedback-form-1'
         '401':
-          description: Unauthorized - invalid or missing token
+          description: 未授權 - 無效或遺失的 token
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: Invalid or missing token
+                  summary: 無效或遺失的 token
                   value:
-                    error: Unauthorized or invalid token
+                    error: 未授權或無效的 token
         '404':
-          description: Mission not found
+          description: 找不到任務
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: Mission does not exist
+                  summary: 任務不存在
                   value:
-                    error: Mission not found
+                    error: 找不到任務
   '/users/{userId}/missions/{missionId}/progress':
     get:
       tags:
         - Progress
-      summary: Get user's mission progress
+      summary: 取得使用者的任務進度
       description: |
-        Returns the user's progress for a specific mission.
+        回傳使用者特定任務的進度。
 
-        **Authentication:**
-        - Requires valid JWT token
+        **認證：**
+        - 需要有效的 JWT token
 
-        **Response Includes:**
-        - Mission ID
-        - Current status (UNCOMPLETED, COMPLETED, DELIVERED)
-        - Watch position in seconds (for VIDEO missions)
+        **回應包含：**
+        - 任務 ID
+        - 目前狀態（UNCOMPLETED、COMPLETED、DELIVERED）
+        - 觀看位置（秒數）（針對影片任務）
 
-        **Status Meanings:**
-        - UNCOMPLETED: Mission in progress or not started
-        - COMPLETED: Mission completed but not delivered yet
-        - DELIVERED: Mission delivered and rewards received
+        **狀態含義：**
+        - UNCOMPLETED：任務進行中或尚未開始
+        - COMPLETED：任務已完成但尚未交付
+        - DELIVERED：任務已交付且獎勵已領取
 
-        **Note:**
-        - For missions without progress record, returns default UNCOMPLETED status with watchPositionSeconds: 0
+        **注意：**
+        - 對於沒有進度記錄的任務，回傳預設的 UNCOMPLETED 狀態，watchPositionSeconds 為 0
       operationId: getUserMissionProgress
       security:
         - bearerAuth: []
@@ -645,116 +645,116 @@ paths:
         - name: userId
           in: path
           required: true
-          description: User ID
+          description: 使用者 ID
           schema:
             type: integer
             example: 1
         - name: missionId
           in: path
           required: true
-          description: Mission ID
+          description: 任務 ID
           schema:
             type: integer
             example: 1
       responses:
         '200':
-          description: Successfully retrieved mission progress
+          description: 成功取得任務進度
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserMissionProgress'
               examples:
                 videoNotStarted:
-                  summary: Video mission not started
+                  summary: 影片任務尚未開始
                   value:
                     missionId: 1
                     status: UNCOMPLETED
                     watchPositionSeconds: 0
                 videoInProgress:
-                  summary: Video mission in progress
+                  summary: 影片任務進行中
                   value:
                     missionId: 1
                     status: UNCOMPLETED
                     watchPositionSeconds: 150
                 videoCompleted:
-                  summary: Video mission completed but not delivered
+                  summary: 影片任務已完成但尚未交付
                   value:
                     missionId: 1
                     status: COMPLETED
                     watchPositionSeconds: 256
                 missionDelivered:
-                  summary: Mission delivered
+                  summary: 任務已交付
                   value:
                     missionId: 1
                     status: DELIVERED
                     watchPositionSeconds: 256
         '401':
-          description: Unauthorized - invalid or missing token
+          description: 未授權 - 無效或遺失的 token
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: Invalid or missing token
+                  summary: 無效或遺失的 token
                   value:
-                    error: Unauthorized or invalid token
+                    error: 未授權或無效的 token
         '403':
-          description: Forbidden - cannot access other user's progress
+          description: 禁止 - 無法存取其他使用者的進度
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 forbidden:
-                  summary: Cannot access other user's progress
+                  summary: 無法存取其他使用者的進度
                   value:
-                    error: Cannot access progress for other users
+                    error: 無法存取其他使用者的進度
         '404':
-          description: Mission not found
+          description: 找不到任務
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: Mission does not exist
+                  summary: 任務不存在
                   value:
-                    error: Mission not found
+                    error: 找不到任務
     put:
       tags:
         - Progress
-      summary: Update user's mission progress
+      summary: 更新使用者的任務進度
       description: |
-        Updates the user's progress for a specific mission (upsert operation - creates if not exists).
+        更新使用者特定任務的進度（upsert 操作 - 不存在則建立）。
 
-        **Authentication:**
-        - Requires valid JWT token
-        - User can only update their own progress
+        **認證：**
+        - 需要有效的 JWT token
+        - 使用者只能更新自己的進度
 
-        **Progress Tracking:**
-        - For VIDEO missions:
-          - Frontend calls this API every 10 seconds during video playback
-          - Send watchPositionSeconds to update progress
-          - Backend automatically checks if watchPositionSeconds == durationSeconds
-          - When equal, mission status becomes "COMPLETED" but NOT "DELIVERED"
-          - Progress can be updated multiple times (for rewatching)
+        **進度追蹤：**
+        - 針對影片任務：
+          - 前端在影片播放期間每 10 秒呼叫此 API
+          - 傳送 watchPositionSeconds 來更新進度
+          - 後端自動檢查 watchPositionSeconds == durationSeconds
+          - 當相等時，任務狀態變為「COMPLETED」但不是「DELIVERED」
+          - 進度可以多次更新（用於重新觀看）
 
-        - For ARTICLE and QUESTIONNAIRE missions:
-          - No progress tracking needed
-          - User directly delivers the mission to mark as completed
+        - 針對文章和問卷任務：
+          - 不需要進度追蹤
+          - 使用者直接交付任務以標記為完成
 
-        **Status Transitions:**
-        - UNCOMPLETED → COMPLETED: When video reaches end (watchPositionSeconds == durationSeconds)
-        - User must manually deliver (via deliver endpoint) to get experience points and change to DELIVERED status
+        **狀態轉換：**
+        - UNCOMPLETED → COMPLETED：當影片播放到結尾時（watchPositionSeconds == durationSeconds）
+        - 使用者必須手動交付（透過 deliver 端點）以獲得經驗值並變更為 DELIVERED 狀態
 
-        **Upsert Behavior:**
-        - If progress record doesn't exist, creates new record with provided watchPositionSeconds
-        - If progress record exists, updates the watchPositionSeconds
+        **Upsert 行為：**
+        - 如果進度記錄不存在，建立新記錄並使用提供的 watchPositionSeconds
+        - 如果進度記錄存在，更新 watchPositionSeconds
 
-        **Note:**
-        - This endpoint does NOT grant experience points
-        - Experience points are only granted via deliver endpoint
+        **注意：**
+        - 此端點不授予經驗值
+        - 經驗值僅透過 deliver 端點授予
       operationId: updateUserMissionProgress
       security:
         - bearerAuth: []
@@ -762,14 +762,14 @@ paths:
         - name: userId
           in: path
           required: true
-          description: User ID
+          description: 使用者 ID
           schema:
             type: integer
             example: 1
         - name: missionId
           in: path
           required: true
-          description: Mission ID
+          description: 任務 ID
           schema:
             type: integer
             example: 1
@@ -781,113 +781,113 @@ paths:
               $ref: '#/components/schemas/UpdateProgressRequest'
             examples:
               videoInProgress:
-                summary: Update video progress to 150 seconds
+                summary: 更新影片進度至 150 秒
                 value:
                   watchPositionSeconds: 150
               videoCompleted:
-                summary: Update video progress to completion (256 seconds)
+                summary: 更新影片進度至完成（256 秒）
                 value:
                   watchPositionSeconds: 256
       responses:
         '200':
-          description: Progress updated successfully
+          description: 進度更新成功
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProgressUpdateResponse'
               examples:
                 videoInProgress:
-                  summary: 'Video progress updated (status: UNCOMPLETED)'
+                  summary: 影片進度已更新（狀態：UNCOMPLETED）
                   value:
                     missionId: 1
                     watchPositionSeconds: 150
                     status: UNCOMPLETED
                 videoCompleted:
-                  summary: 'Video progress updated (status: COMPLETED)'
+                  summary: 影片進度已更新（狀態：COMPLETED）
                   value:
                     missionId: 1
                     watchPositionSeconds: 256
                     status: COMPLETED
         '400':
-          description: Invalid request data
+          description: 無效的請求資料
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalidProgress:
-                  summary: Invalid watch position
+                  summary: 無效的觀看位置
                   value:
-                    error: 'Invalid watch position: must be between 0 and video duration'
+                    error: 無效的觀看位置：必須介於 0 和影片長度之間
         '401':
-          description: Unauthorized - invalid or missing token
+          description: 未授權 - 無效或遺失的 token
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: Invalid or missing token
+                  summary: 無效或遺失的 token
                   value:
-                    error: Unauthorized or invalid token
+                    error: 未授權或無效的 token
         '403':
-          description: Forbidden - cannot update other user's progress
+          description: 禁止 - 無法更新其他使用者的進度
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 forbidden:
-                  summary: Cannot update other user's progress
+                  summary: 無法更新其他使用者的進度
                   value:
-                    error: Cannot update progress for other users
+                    error: 無法更新其他使用者的進度
         '404':
-          description: Mission not found
+          description: 找不到任務
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: Mission does not exist
+                  summary: 任務不存在
                   value:
-                    error: Mission not found
+                    error: 找不到任務
   '/users/{userId}/missions/{missionId}/progress/deliver':
     post:
       tags:
         - Progress
-      summary: Deliver mission for experience points
+      summary: 交付任務以獲得經驗值
       description: |
-        Deliver a completed mission to receive experience points and change status to DELIVERED.
+        交付已完成的任務以獲得經驗值並將狀態變更為 DELIVERED。
 
-        **Authentication:**
-        - Requires valid JWT token
-        - User can only deliver their own progress
+        **認證：**
+        - 需要有效的 JWT token
+        - 使用者只能交付自己的進度
 
-        **Requirements:**
-        - For VIDEO missions: Must have status COMPLETED (watched to the end)
-        - For ARTICLE/QUESTIONNAIRE missions: Can be delivered directly (no progress tracking)
-        - Cannot deliver if mission status is already DELIVERED
-        - Each mission can only be delivered once
+        **要求：**
+        - 針對影片任務：必須具有 COMPLETED 狀態（已觀看至結尾）
+        - 針對文章/問卷任務：可以直接交付（無需進度追蹤）
+        - 如果任務狀態已經是 DELIVERED 則無法交付
+        - 每個任務只能交付一次
 
-        **Effects:**
-        - Changes progress status from COMPLETED (or UNCOMPLETED for non-video) to DELIVERED
-        - Adds experience points to user (amount defined in mission rewards)
-        - Updates user level based on new experience points
+        **效果：**
+        - 將進度狀態從 COMPLETED（或非影片任務的 UNCOMPLETED）變更為 DELIVERED
+        - 將經驗值新增至使用者（數量定義於任務獎勵中）
+        - 根據新的經驗值更新使用者等級
 
-        **Level Calculation:**
-        - Level 1: 0-199 XP
-        - Level 2: 200-499 XP
-        - Level 3: 500-1499 XP
-        - Level 4: 1500-2999 XP
-        - Level 5: 3000-4999 XP
-        - Level 6: 5000-6999 XP
-        - Level 7+: +2000 XP per level
-        - Level 36 (max): 65000+ XP
+        **等級計算：**
+        - 等級 1：0-199 XP
+        - 等級 2：200-499 XP
+        - 等級 3：500-1499 XP
+        - 等級 4：1500-2999 XP
+        - 等級 5：3000-4999 XP
+        - 等級 6：5000-6999 XP
+        - 等級 7+：每級 +2000 XP
+        - 等級 36（最高）：65000+ XP
 
-        **Note:**
-        - Experience points are only granted once per mission
-        - Duplicate deliveries return 409 Conflict
+        **注意：**
+        - 經驗值每個任務僅授予一次
+        - 重複交付回傳 409 Conflict
       operationId: deliverMission
       security:
         - bearerAuth: []
@@ -895,128 +895,128 @@ paths:
         - name: userId
           in: path
           required: true
-          description: User ID
+          description: 使用者 ID
           schema:
             type: integer
             example: 1
         - name: missionId
           in: path
           required: true
-          description: Mission ID
+          description: 任務 ID
           schema:
             type: integer
             example: 1
       responses:
         '200':
-          description: Mission delivered successfully
+          description: 任務交付成功
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliverResponse'
               examples:
                 success:
-                  summary: Successfully delivered and gained experience
+                  summary: 成功交付並獲得經驗值
                   value:
-                    message: Mission delivered successfully
+                    message: 任務交付成功
                     experienceGained: 100
                     totalExperience: 1500
                     currentLevel: 4
                 levelUp:
-                  summary: Delivered and leveled up
+                  summary: 交付並升級
                   value:
-                    message: Mission delivered successfully
+                    message: 任務交付成功
                     experienceGained: 100
                     totalExperience: 3000
                     currentLevel: 5
         '400':
-          description: Mission not completed or invalid state
+          description: 任務未完成或狀態無效
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 videoNotCompleted:
-                  summary: Cannot deliver incomplete video mission
+                  summary: 無法交付未完成的影片任務
                   value:
-                    error: Video mission must be COMPLETED before delivery
+                    error: 影片任務必須為 COMPLETED 狀態才能交付
         '401':
-          description: Unauthorized - invalid or missing token
+          description: 未授權 - 無效或遺失的 token
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: Invalid or missing token
+                  summary: 無效或遺失的 token
                   value:
-                    error: Unauthorized or invalid token
+                    error: 未授權或無效的 token
         '403':
-          description: Forbidden - cannot deliver other user's progress
+          description: 禁止 - 無法交付其他使用者的進度
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 forbidden:
-                  summary: Cannot deliver other user's progress
+                  summary: 無法交付其他使用者的進度
                   value:
-                    error: Cannot deliver progress for other users
+                    error: 無法交付其他使用者的進度
         '404':
-          description: Mission not found
+          description: 找不到任務
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: Mission does not exist
+                  summary: 任務不存在
                   value:
-                    error: Mission not found
+                    error: 找不到任務
         '409':
-          description: Mission already delivered
+          description: 任務已交付
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 duplicate:
-                  summary: Cannot deliver twice
+                  summary: 無法交付兩次
                   value:
-                    error: Mission has already been delivered
+                    error: 任務已經交付過了
   /users/me:
     get:
       tags:
         - Users
-      summary: Get current user profile
+      summary: 取得目前使用者的個人資料
       description: |
-        Returns the current authenticated user's profile information.
+        回傳目前已認證使用者的個人資料資訊。
 
-        **Authentication:**
-        - Requires valid JWT token
+        **認證：**
+        - 需要有效的 JWT token
 
-        **Response Includes:**
-        - User ID
-        - Username
-        - Experience points (total accumulated)
-        - Current level (calculated from experience)
-        - User role (STUDENT, TEACHER, ADMIN)
+        **回應包含：**
+        - 使用者 ID
+        - 使用者名稱
+        - 經驗值（累計總數）
+        - 目前等級（從經驗值計算）
+        - 使用者角色（STUDENT、TEACHER、ADMIN）
 
-        **Level Information:**
-        - Level is calculated based on total experience points
-        - Maximum level is 36 (requires 65000+ XP)
+        **等級資訊：**
+        - 等級根據總經驗值計算
+        - 最高等級為 36（需要 65000+ XP）
       operationId: getCurrentUser
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Successfully retrieved user profile
+          description: 成功取得使用者個人資料
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
               examples:
                 student:
-                  summary: Student user profile
+                  summary: 學生使用者個人資料
                   value:
                     id: 1
                     username: john_doe123
@@ -1024,7 +1024,7 @@ paths:
                     level: 4
                     role: STUDENT
                 highLevel:
-                  summary: High-level student
+                  summary: 高等級學生
                   value:
                     id: 2
                     username: advanced_learner
@@ -1032,52 +1032,52 @@ paths:
                     level: 11
                     role: STUDENT
         '401':
-          description: Unauthorized - invalid or missing token
+          description: 未授權 - 無效或遺失的 token
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: Invalid or missing token
+                  summary: 無效或遺失的 token
                   value:
-                    error: Unauthorized or invalid token
+                    error: 未授權或無效的 token
         '404':
-          description: Not Found - user profile not found
+          description: 找不到 - 找不到使用者個人資料
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: User not found
+                  summary: 找不到使用者
                   value:
-                    error: User not found
+                    error: 找不到使用者
   /orders:
     post:
       tags:
         - Orders
-      summary: Create an order
+      summary: 建立訂單
       description: |
-        Creates a new order for a journey purchase.
+        為旅程購買建立新訂單。
 
-        **Authentication Required:**
-        - User must be logged in to create an order
+        **需要認證：**
+        - 使用者必須已登入才能建立訂單
 
-        **Business Logic:**
-        - One order can only contain one journey (MVP scope)
-        - If user has already purchased the journey: returns 409 Conflict
-        - If user already has an unpaid order for this journey: returns the existing order (200 OK)
-        - Order number format: `{timestamp}{userId}{randomCode}`
-          - Example: `20251121011117cd5` = `2025112101` (timestamp) + `11` (userId) + `17cd5` (random code)
-        - Journey price is locked at order creation time (from journeys.price)
-        - Order status defaults to UNPAID
-        - Order expiration time is set to created_at + 3 days
-        - Orders automatically expire after 3 days if not paid (status changes to EXPIRED)
+        **業務邏輯：**
+        - 一個訂單只能包含一個旅程（MVP 範圍）
+        - 如果使用者已購買該旅程：回傳 409 Conflict
+        - 如果使用者已有該旅程的未付款訂單：回傳現有訂單（200 OK）
+        - 訂單編號格式：`{timestamp}{userId}{randomCode}`
+          - 範例：`20251121011117cd5` = `2025112101`（時間戳記）+ `11`（userId）+ `17cd5`（隨機碼）
+        - 旅程價格在訂單建立時鎖定（來自 journeys.price）
+        - 訂單狀態預設為 UNPAID
+        - 訂單到期時間設定為 created_at + 3 天
+        - 如果 3 天內未付款，訂單自動過期（狀態變更為 EXPIRED）
 
-        **Next Steps:**
-        - Frontend should redirect to order payment page
-        - User can complete payment via POST /orders/{orderId}/pay
+        **後續步驟：**
+        - 前端應重新導向至訂單付款頁面
+        - 使用者可透過 POST /orders/{orderId}/pay 完成付款
       operationId: createOrder
       security:
         - bearerAuth: []
@@ -1089,21 +1089,21 @@ paths:
               $ref: '#/components/schemas/CreateOrderRequest'
             examples:
               create:
-                summary: Create order for a journey
+                summary: 為旅程建立訂單
                 value:
                   items:
                     - journeyId: 17
                       quantity: 1
       responses:
         '200':
-          description: 'User already has an unpaid order for this journey, returning existing order'
+          description: 使用者已有該旅程的未付款訂單，回傳現有訂單
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderResponse'
               examples:
                 existing:
-                  summary: Existing unpaid order returned
+                  summary: 回傳現有未付款訂單
                   value:
                     id: 120
                     orderNumber: 20251120011117a8f
@@ -1124,14 +1124,14 @@ paths:
                     expiredAt: 1732593600000
                     paidAt: null
         '201':
-          description: Order created successfully
+          description: 訂單建立成功
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderResponse'
               examples:
                 created:
-                  summary: New order created
+                  summary: 新訂單已建立
                   value:
                     id: 123
                     orderNumber: 20251121011117cd5
@@ -1152,70 +1152,70 @@ paths:
                     expiredAt: 1732680000000
                     paidAt: null
         '400':
-          description: Bad request - invalid journey ID
+          description: 錯誤的請求 - 無效的旅程 ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalidJourney:
-                  summary: Invalid journey ID
+                  summary: 無效的旅程 ID
                   value:
-                    error: Invalid journey ID
+                    error: 無效的旅程 ID
         '401':
-          description: Unauthorized - user not logged in
+          description: 未授權 - 使用者未登入
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: User not authenticated
+                  summary: 使用者未認證
                   value:
-                    error: Authentication required
+                    error: 需要身份驗證
         '404':
-          description: Journey not found
+          description: 找不到旅程
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: Journey does not exist
+                  summary: 旅程不存在
                   value:
-                    error: Journey not found
+                    error: 找不到旅程
         '409':
-          description: Conflict - user has already purchased this journey
+          description: 衝突 - 使用者已購買此旅程
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 alreadyPurchased:
-                  summary: User already owns this journey
+                  summary: 使用者已擁有此旅程
                   value:
                     error: 你已經購買此課程
   '/orders/{orderId}':
     get:
       tags:
         - Orders
-      summary: Get order details
+      summary: 取得訂單詳細資訊
       description: |
-        Returns detailed information about a specific order.
+        回傳特定訂單的詳細資訊。
 
-        **Authentication Required:**
-        - User must be logged in
-        - User can only view their own orders (returns 404 if trying to access another user's order)
+        **需要認證：**
+        - 使用者必須已登入
+        - 使用者只能查看自己的訂單（嘗試存取其他使用者的訂單會回傳 404）
 
-        **Use Cases:**
-        - Display order information on payment page ("完成支付" stage)
-        - Display order confirmation after payment ("購買完成" stage)
-        - Review order history
+        **使用案例：**
+        - 在付款頁面顯示訂單資訊（「完成支付」階段）
+        - 付款後顯示訂單確認（「購買完成」階段）
+        - 查看訂單歷史記錄
 
-        **Response:**
-        - Order basic information (order number, status, prices)
-        - Order items (journey information)
-        - Timestamps (created_at, paid_at if applicable)
+        **回應：**
+        - 訂單基本資訊（訂單編號、狀態、價格）
+        - 訂單項目（旅程資訊）
+        - 時間戳記（created_at、paid_at（如適用））
       operationId: getOrderDetail
       security:
         - bearerAuth: []
@@ -1223,20 +1223,20 @@ paths:
         - name: orderId
           in: path
           required: true
-          description: Order ID
+          description: 訂單 ID
           schema:
             type: integer
             example: 123
       responses:
         '200':
-          description: Successfully retrieved order details
+          description: 成功取得訂單詳細資訊
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderResponse'
               examples:
                 unpaid:
-                  summary: Unpaid order
+                  summary: 未付款訂單
                   value:
                     id: 123
                     orderNumber: 20251121011117cd5
@@ -1257,7 +1257,7 @@ paths:
                     expiredAt: 1732680000000
                     paidAt: null
                 paid:
-                  summary: Paid order
+                  summary: 已付款訂單
                   value:
                     id: 123
                     orderNumber: 20251121011117cd5
@@ -1278,7 +1278,7 @@ paths:
                     expiredAt: null
                     paidAt: 1732507200000
                 expired:
-                  summary: Expired order
+                  summary: 已過期訂單
                   value:
                     id: 124
                     orderNumber: 20251118011117xyz
@@ -1299,50 +1299,50 @@ paths:
                     expiredAt: 1732420800000
                     paidAt: null
         '401':
-          description: Unauthorized - user not logged in
+          description: 未授權 - 使用者未登入
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: User not authenticated
+                  summary: 使用者未認證
                   value:
-                    error: Authentication required
+                    error: 需要身份驗證
         '404':
-          description: Order not found or user does not have permission to view this order
+          description: 找不到訂單或使用者沒有查看此訂單的權限
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: Order does not exist or access denied
+                  summary: 訂單不存在或存取被拒絕
                   value:
-                    error: Order not found
+                    error: 找不到訂單
   '/orders/{orderId}/action/pay':
     post:
       tags:
         - Orders
-      summary: Complete order payment
+      summary: 完成訂單付款
       description: |
-        Completes payment for an order and grants journey access to the user.
+        完成訂單付款並授予使用者旅程存取權。
 
-        **Authentication Required:**
-        - User must be logged in
-        - User can only pay for their own orders
+        **需要認證：**
+        - 使用者必須已登入
+        - 使用者只能支付自己的訂單
 
-        **Business Logic:**
-        - Order status must be UNPAID (EXPIRED orders cannot be paid)
-        - After successful payment:
-          - Order status changes to PAID
-          - paid_at timestamp is set
-          - User gains access to the journey (record created in user_journeys table)
-        - Payment is simulated (no actual payment gateway integration in MVP)
+        **業務邏輯：**
+        - 訂單狀態必須為 UNPAID（已過期的訂單無法付款）
+        - 付款成功後：
+          - 訂單狀態變更為 PAID
+          - 設定 paid_at 時間戳記
+          - 使用者獲得旅程存取權（在 user_journeys 表中建立記錄）
+        - 付款為模擬（MVP 中沒有整合實際的付款閘道）
 
-        **Note:**
-        - In MVP, clicking "立即支付" button automatically completes the purchase
-        - Real payment integration can be added in future releases
+        **注意：**
+        - 在 MVP 中，點擊「立即支付」按鈕會自動完成購買
+        - 實際的付款整合可在未來版本中加入
       operationId: payOrder
       security:
         - bearerAuth: []
@@ -1350,20 +1350,20 @@ paths:
         - name: orderId
           in: path
           required: true
-          description: Order ID
+          description: 訂單 ID
           schema:
             type: integer
             example: 123
       responses:
         '200':
-          description: Payment completed successfully
+          description: 付款完成成功
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PayOrderResponse'
               examples:
                 success:
-                  summary: Payment successful
+                  summary: 付款成功
                   value:
                     id: 123
                     orderNumber: 20251121011117cd5
@@ -1372,66 +1372,66 @@ paths:
                     paidAt: 1732507200000
                     message: 付款完成
         '401':
-          description: Unauthorized - user not logged in
+          description: 未授權 - 使用者未登入
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: User not authenticated
+                  summary: 使用者未認證
                   value:
-                    error: Authentication required
+                    error: 需要身份驗證
         '404':
-          description: Order not found or user does not have permission
+          description: 找不到訂單或使用者沒有權限
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: Order does not exist or access denied
+                  summary: 訂單不存在或存取被拒絕
                   value:
-                    error: Order not found
+                    error: 找不到訂單
         '409':
-          description: Conflict - order is already paid or expired
+          description: 衝突 - 訂單已付款或已過期
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 alreadyPaid:
-                  summary: Order already completed
+                  summary: 訂單已完成
                   value:
                     error: 訂單已付款
                 expired:
-                  summary: Order has expired
+                  summary: 訂單已過期
                   value:
                     error: 訂單已過期
   '/users/{userId}/orders':
     get:
       tags:
         - Users
-      summary: Get user's order list
+      summary: 取得使用者的訂單清單
       description: |
-        Returns a list of orders for a specific user.
+        回傳特定使用者的訂單清單。
 
-        **Authentication Required:**
-        - User must be logged in
-        - User can only view their own orders (returns 404 if trying to access another user's orders)
+        **需要認證：**
+        - 使用者必須已登入
+        - 使用者只能查看自己的訂單（嘗試存取其他使用者的訂單會回傳 404）
 
-        **Use Cases:**
-        - Display order list in "訂單管理" section
-        - Allow users to review their order history
+        **使用案例：**
+        - 在「訂單管理」區域顯示訂單清單
+        - 讓使用者查看訂單歷史記錄
 
-        **Query Parameters:**
-        - page: Page number for pagination (optional, default: 1)
-        - limit: Items per page (optional, default: 20)
+        **查詢參數：**
+        - page：分頁的頁碼（選填，預設：1）
+        - limit：每頁項目數（選填，預設：20）
 
-        **Response:**
-        - List of all order summaries (basic order info + first journey item)
-        - Pagination metadata
-        - Orders are sorted by creation time (newest first)
+        **回應：**
+        - 所有訂單摘要清單（基本訂單資訊 + 第一個旅程項目）
+        - 分頁中繼資料
+        - 訂單按建立時間排序（最新的在前）
       operationId: getUserOrders
       security:
         - bearerAuth: []
@@ -1439,14 +1439,14 @@ paths:
         - name: userId
           in: path
           required: true
-          description: User ID
+          description: 使用者 ID
           schema:
             type: integer
             example: 11
         - name: page
           in: query
           required: false
-          description: Page number (starts from 1)
+          description: 頁碼（從 1 開始）
           schema:
             type: integer
             minimum: 1
@@ -1455,7 +1455,7 @@ paths:
         - name: limit
           in: query
           required: false
-          description: Number of items per page
+          description: 每頁項目數
           schema:
             type: integer
             minimum: 1
@@ -1464,14 +1464,14 @@ paths:
             example: 20
       responses:
         '200':
-          description: Successfully retrieved order list
+          description: 成功取得訂單清單
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderListResponse'
               examples:
                 success:
-                  summary: User order list with pagination
+                  summary: 使用者訂單清單（含分頁）
                   value:
                     orders:
                       - id: 125
@@ -1496,52 +1496,52 @@ paths:
                       limit: 20
                       total: 2
         '401':
-          description: Unauthorized - user not logged in
+          description: 未授權 - 使用者未登入
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: User not authenticated
+                  summary: 使用者未認證
                   value:
-                    error: Authentication required
+                    error: 需要身份驗證
         '404':
-          description: User not found or access denied
+          description: 找不到使用者或存取被拒絕
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: User does not exist or access denied
+                  summary: 使用者不存在或存取被拒絕
                   value:
-                    error: User not found
+                    error: 找不到使用者
   '/users/{userId}/journeys':
     get:
       tags:
         - Users
-      summary: Get user's purchased journeys
+      summary: 取得使用者已購買的旅程
       description: |
-        Returns a list of journeys that the user has purchased (has access to).
+        回傳使用者已購買（可存取）的旅程清單。
 
-        **Authentication Required:**
-        - User must be logged in
-        - User can only view their own purchased journeys (returns 404 if trying to access another user's journeys)
+        **需要認證：**
+        - 使用者必須已登入
+        - 使用者只能查看自己購買的旅程（嘗試存取其他使用者的旅程會回傳 404）
 
-        **Use Cases:**
-        - Check if user has purchased a specific journey
-        - Display user's course library
-        - Verify journey access before allowing content viewing
+        **使用案例：**
+        - 檢查使用者是否已購買特定旅程
+        - 顯示使用者的課程庫
+        - 在允許查看內容前驗證旅程存取權
 
-        **Response:**
-        - List of purchased journeys with basic information
-        - Purchase timestamp (when payment was completed)
-        - Related order number for reference
+        **回應：**
+        - 已購買旅程清單及基本資訊
+        - 購買時間戳記（付款完成時間）
+        - 相關訂單編號供參考
 
-        **Note:**
-        - Only includes journeys with PAID orders (UNPAID orders do not grant access)
-        - Frontend can use this list to determine whether to show "繼續學習" or "立即加入課程" button
+        **注意：**
+        - 僅包含已付款訂單的旅程（未付款訂單不授予存取權）
+        - 前端可使用此清單來決定要顯示「繼續學習」或「立即加入課程」按鈕
       operationId: getUserJourneys
       security:
         - bearerAuth: []
@@ -1549,20 +1549,20 @@ paths:
         - name: userId
           in: path
           required: true
-          description: User ID
+          description: 使用者 ID
           schema:
             type: integer
             example: 11
       responses:
         '200':
-          description: Successfully retrieved user's purchased journeys
+          description: 成功取得使用者已購買的旅程
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserJourneyListResponse'
               examples:
                 success:
-                  summary: User's purchased journey list
+                  summary: 使用者已購買的旅程清單
                   value:
                     journeys:
                       - journeyId: 17
@@ -1580,31 +1580,31 @@ paths:
                         purchasedAt: 1732334400000
                         orderNumber: 20251119011115b2c
                 empty:
-                  summary: User has no purchased journeys
+                  summary: 使用者沒有已購買的旅程
                   value:
                     journeys: []
         '401':
-          description: Unauthorized - user not logged in
+          description: 未授權 - 使用者未登入
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: User not authenticated
+                  summary: 使用者未認證
                   value:
-                    error: Authentication required
+                    error: 需要身份驗證
         '404':
-          description: User not found or access denied
+          description: 找不到使用者或存取被拒絕
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 notFound:
-                  summary: User does not exist or access denied
+                  summary: 使用者不存在或存取被拒絕
                   value:
-                    error: User not found
+                    error: 找不到使用者
 components:
   securitySchemes:
     bearerAuth:
@@ -1612,20 +1612,20 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        JWT access token obtained from login endpoint.
+        從登入端點取得的 JWT 存取權杖。
 
-        **Usage:**
-        Include in Authorization header: `Authorization: Bearer <token>`
+        **使用方式：**
+        包含在 Authorization 標頭中：`Authorization: Bearer <token>`
 
-        **Token Contents:**
-        - user_id: User identifier
-        - username: Username
-        - iat: Issued at timestamp
-        - exp: Expiration timestamp (1 day from iat)
+        **權杖內容：**
+        - user_id：使用者識別碼
+        - username：使用者名稱
+        - iat：簽發時間戳記
+        - exp：過期時間戳記（簽發後 1 天）
 
-        **Security:**
-        - Tokens expire in 1 day
-        - Always use HTTPS in production
+        **安全性：**
+        - 權杖在 1 天後過期
+        - 正式環境務必使用 HTTPS
   schemas:
     HealthResponse:
       type: object
@@ -1638,13 +1638,13 @@ components:
           enum:
             - UP
             - DOWN
-          description: Overall health status of the service
+          description: 服務的整體健康狀態
         database:
           type: string
           enum:
             - UP
             - DOWN
-          description: Database connection health status
+          description: 資料庫連線健康狀態
     ErrorResponse:
       type: object
       required:
@@ -1652,7 +1652,7 @@ components:
       properties:
         error:
           type: string
-          description: Error message
+          description: 錯誤訊息
           example: An error occurred
     RegisterRequest:
       type: object
@@ -1665,14 +1665,14 @@ components:
           minLength: 3
           maxLength: 50
           pattern: '^[a-zA-Z0-9_]+$'
-          description: Username (alphanumeric and underscore only)
+          description: 使用者名稱（僅限英數字和底線）
           example: john_doe123
         password:
           type: string
           minLength: 8
           maxLength: 72
           pattern: '^[a-zA-Z0-9@$!%*?&#]+$'
-          description: 'Password (alphanumeric and special characters, 8-72 characters)'
+          description: 密碼（英數字和特殊字元，8-72 個字元）
           example: SecurePass123!
     RegisterResponse:
       type: object
@@ -1682,11 +1682,11 @@ components:
       properties:
         message:
           type: string
-          description: Success message
+          description: 成功訊息
           example: Registration successful
         userId:
           type: integer
-          description: Newly created user ID
+          description: 新建立的使用者 ID
           example: 1
     LoginRequest:
       type: object
@@ -1696,11 +1696,11 @@ components:
       properties:
         username:
           type: string
-          description: Username
+          description: 使用者名稱
           example: john_doe123
         password:
           type: string
-          description: Password
+          description: 密碼
           example: SecurePass123!
     LoginResponse:
       type: object
@@ -1710,7 +1710,7 @@ components:
       properties:
         accessToken:
           type: string
-          description: JWT access token (expires in 1 day)
+          description: JWT 存取權杖（1 天後過期）
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         user:
           $ref: '#/components/schemas/UserInfo'
@@ -1723,16 +1723,16 @@ components:
       properties:
         id:
           type: integer
-          description: User ID
+          description: 使用者 ID
           example: 1
         username:
           type: string
-          description: Username
+          description: 使用者名稱
           example: john_doe123
         experience:
           type: integer
           minimum: 0
-          description: User experience points
+          description: 使用者經驗值
           example: 0
     LogoutResponse:
       type: object
@@ -1741,7 +1741,7 @@ components:
       properties:
         message:
           type: string
-          description: Success message
+          description: 成功訊息
           example: Logout successful
     JourneyListItem:
       type: object
@@ -1756,32 +1756,32 @@ components:
       properties:
         id:
           type: integer
-          description: Journey ID
+          description: 旅程 ID
           example: 1
         slug:
           type: string
-          description: URL-friendly identifier for the journey
+          description: 旅程的 URL 友善識別碼
           example: software-design-pattern
         title:
           type: string
-          description: Journey title
+          description: 旅程標題
           example: 軟體設計模式精通之旅
         description:
           type: string
-          description: Journey description
+          description: 旅程描述
           example: 用 C.A. 模式大大提昇系統思維能力
         coverImageUrl:
           type: string
           format: uri
-          description: Cover image URL
+          description: 封面圖片 URL
           example: 'https://example.com/cover1.jpg'
         teacherName:
           type: string
-          description: Teacher name
+          description: 教師名稱
           example: 水球潘
         price:
           type: integer
-          description: Journey price in TWD (New Taiwan Dollar)
+          description: 旅程價格，單位為新台幣（TWD）
           example: 3990
     JourneyDetail:
       type: object
@@ -1797,36 +1797,36 @@ components:
       properties:
         id:
           type: integer
-          description: Journey ID
+          description: 旅程 ID
           example: 1
         slug:
           type: string
-          description: URL-friendly identifier for the journey
+          description: 旅程的 URL 友善識別碼
           example: software-design-pattern
         title:
           type: string
-          description: Journey title
+          description: 旅程標題
           example: 軟體設計模式精通之旅
         description:
           type: string
-          description: Journey description
+          description: 旅程描述
           example: 用 C.A. 模式大大提昇系統思維能力
         coverImageUrl:
           type: string
           format: uri
-          description: Cover image URL
+          description: 封面圖片 URL
           example: 'https://example.com/cover1.jpg'
         teacherName:
           type: string
-          description: Teacher name
+          description: 教師名稱
           example: 水球潘
         price:
           type: integer
-          description: Journey price in TWD (New Taiwan Dollar)
+          description: 旅程價格，單位為新台幣（TWD）
           example: 3990
         chapters:
           type: array
-          description: List of chapters in this journey
+          description: 此旅程中的章節列表
           items:
             $ref: '#/components/schemas/Chapter'
         userStatus:
@@ -1841,19 +1841,19 @@ components:
       properties:
         id:
           type: integer
-          description: Chapter ID
+          description: 章節 ID
           example: 1
         title:
           type: string
-          description: Chapter title
+          description: 章節標題
           example: 課程介紹
         orderIndex:
           type: integer
-          description: Chapter order index
+          description: 章節排序索引
           example: 1
         missions:
           type: array
-          description: List of missions in this chapter
+          description: 此章節中的任務列表
           items:
             $ref: '#/components/schemas/MissionSummary'
     MissionSummary:
@@ -1867,7 +1867,7 @@ components:
       properties:
         id:
           type: integer
-          description: Mission ID
+          description: 任務 ID
           example: 1
         type:
           type: string
@@ -1875,11 +1875,11 @@ components:
             - VIDEO
             - ARTICLE
             - QUESTIONNAIRE
-          description: 'Mission type (video, article, or questionnaire)'
+          description: 任務類型（影片、文章或問卷）
           example: VIDEO
         title:
           type: string
-          description: Mission title
+          description: 任務標題
           example: 這門課手把手帶你成為架構設計的高手
         accessLevel:
           type: string
@@ -1888,14 +1888,14 @@ components:
             - AUTHENTICATED
             - PURCHASED
           description: |
-            Mission access level:
-            - PUBLIC: Can be viewed without authentication
-            - AUTHENTICATED: Requires login to view
-            - PURCHASED: Requires journey purchase to view
+            任務存取層級：
+            - PUBLIC: 無需驗證即可檢視
+            - AUTHENTICATED: 需要登入才能檢視
+            - PURCHASED: 需要購買旅程才能檢視
           example: PUBLIC
         orderIndex:
           type: integer
-          description: Mission order index within the chapter
+          description: 任務在章節內的排序索引
           example: 1
         status:
           type: string
@@ -1904,13 +1904,13 @@ components:
             - COMPLETED
             - DELIVERED
           description: |
-            Mission completion status for the authenticated user.
-            - UNCOMPLETED: Mission in progress or not started
-            - COMPLETED: Mission completed but not delivered yet
-            - DELIVERED: Mission delivered and rewards received
+            已驗證使用者的任務完成狀態。
+            - UNCOMPLETED: 任務進行中或尚未開始
+            - COMPLETED: 任務已完成但尚未交付
+            - DELIVERED: 任務已交付並已領取獎勵
 
-            Note: This field is only included when the request is authenticated.
-            For unauthenticated requests, this field will be null or omitted.
+            注意：此欄位僅在請求已驗證時包含。
+            對於未驗證的請求，此欄位將為 null 或省略。
           example: UNCOMPLETED
           nullable: true
     MissionDetail:
@@ -1929,15 +1929,15 @@ components:
       properties:
         id:
           type: integer
-          description: Mission ID
+          description: 任務 ID
           example: 1
         chapterId:
           type: integer
-          description: Chapter ID this mission belongs to
+          description: 此任務所屬的章節 ID
           example: 8
         journeyId:
           type: integer
-          description: Journey ID (derived from chapter)
+          description: 旅程 ID（從章節衍生）
           example: 1
         type:
           type: string
@@ -1945,34 +1945,34 @@ components:
             - VIDEO
             - ARTICLE
             - QUESTIONNAIRE
-          description: Mission type
+          description: 任務類型
           example: VIDEO
         title:
           type: string
-          description: Mission title
+          description: 任務標題
           example: 課程介紹：這門課手把手帶你成為架構設計的高手
         description:
           type: string
-          description: Detailed description of the mission
+          description: 任務的詳細描述
           example: 思維升級：Christopher Alexander 模式六大要素及模式語言
         isFreePreview:
           type: boolean
-          description: Whether this mission is free to preview
+          description: 此任務是否可免費預覽
           example: true
         createdAt:
           type: integer
           format: int64
-          description: Creation timestamp in milliseconds
+          description: 建立時間戳記（毫秒）
           example: 1733294001561
         videoLength:
           type: string
-          description: 'Video duration in MM:SS format (VIDEO type only, derived from content)'
+          description: '影片時長，格式為 MM:SS（僅限 VIDEO 類型，從內容衍生）'
           example: '04:16'
         reward:
           $ref: '#/components/schemas/MissionReward'
         resource:
           type: array
-          description: Mission resource array (can have multiple items)
+          description: 任務資源陣列（可包含多個項目）
           items:
             $ref: '#/components/schemas/MissionResource'
     MissionReward:
@@ -1982,7 +1982,7 @@ components:
       properties:
         exp:
           type: integer
-          description: Experience points reward
+          description: 經驗值獎勵
           example: 100
     MissionResource:
       type: object
@@ -1992,7 +1992,7 @@ components:
       properties:
         id:
           type: integer
-          description: Resource item ID
+          description: 資源項目 ID
           example: 0
         type:
           type: string
@@ -2000,20 +2000,20 @@ components:
             - video
             - article
             - form
-          description: Resource type (lowercase)
+          description: 資源類型（小寫）
           example: video
         resourceUrl:
           type: string
           format: uri
-          description: 'Resource URL (optional, required for video/external content)'
+          description: 資源 URL（選填，影片/外部內容必填）
           example: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
         resourceContent:
           type: string
-          description: 'Resource content (optional, for inline text content)'
+          description: 資源內容（選填，用於內嵌文字內容）
           example: Article content or form HTML here
         durationSeconds:
           type: integer
-          description: Video duration in seconds (VIDEO type only)
+          description: 影片時長（秒）（僅限 VIDEO 類型）
           example: 256
     UpdateProgressRequest:
       type: object
@@ -2022,7 +2022,7 @@ components:
       properties:
         watchPositionSeconds:
           type: integer
-          description: Current watch position in seconds (for VIDEO missions)
+          description: 目前觀看位置（秒）（用於 VIDEO 任務）
           example: 150
           minimum: 0
     ProgressUpdateResponse:
@@ -2034,11 +2034,11 @@ components:
       properties:
         missionId:
           type: integer
-          description: Mission ID
+          description: 任務 ID
           example: 1
         watchPositionSeconds:
           type: integer
-          description: Updated watch position (for VIDEO missions)
+          description: 更新後的觀看位置（用於 VIDEO 任務）
           example: 150
         status:
           type: string
@@ -2046,7 +2046,7 @@ components:
             - UNCOMPLETED
             - COMPLETED
             - DELIVERED
-          description: Current mission status after update
+          description: 更新後的任務狀態
           example: UNCOMPLETED
     DeliverResponse:
       type: object
@@ -2058,19 +2058,19 @@ components:
       properties:
         message:
           type: string
-          description: Success message
+          description: 成功訊息
           example: Mission delivered successfully
         experienceGained:
           type: integer
-          description: Experience points gained from this delivery
+          description: 此次交付獲得的經驗值
           example: 100
         totalExperience:
           type: integer
-          description: User's total experience points after delivery
+          description: 交付後使用者的總經驗值
           example: 1500
         currentLevel:
           type: integer
-          description: User's current level after delivery
+          description: 交付後使用者的目前等級
           example: 4
     UserMissionProgress:
       type: object
@@ -2081,7 +2081,7 @@ components:
       properties:
         missionId:
           type: integer
-          description: Mission ID
+          description: 任務 ID
           example: 1
         status:
           type: string
@@ -2089,11 +2089,11 @@ components:
             - UNCOMPLETED
             - COMPLETED
             - DELIVERED
-          description: Mission status
+          description: 任務狀態
           example: COMPLETED
         watchPositionSeconds:
           type: integer
-          description: Current watch position in seconds (for VIDEO missions)
+          description: 目前觀看位置（秒）（用於 VIDEO 任務）
           example: 256
     UserProfile:
       type: object
@@ -2106,22 +2106,22 @@ components:
       properties:
         id:
           type: integer
-          description: User ID
+          description: 使用者 ID
           example: 1
         username:
           type: string
-          description: Username
+          description: 使用者名稱
           example: john_doe123
         experiencePoints:
           type: integer
           minimum: 0
-          description: Total accumulated experience points
+          description: 累積的總經驗值
           example: 1500
         level:
           type: integer
           minimum: 1
           maximum: 36
-          description: Current level (1-36)
+          description: 目前等級（1-36）
           example: 4
         role:
           type: string
@@ -2129,7 +2129,7 @@ components:
             - STUDENT
             - TEACHER
             - ADMIN
-          description: User role
+          description: 使用者角色
           example: STUDENT
     CreateOrderRequest:
       type: object
@@ -2138,7 +2138,7 @@ components:
       properties:
         items:
           type: array
-          description: List of items to purchase
+          description: 要購買的項目列表
           minItems: 1
           items:
             type: object
@@ -2148,11 +2148,11 @@ components:
             properties:
               journeyId:
                 type: integer
-                description: ID of the journey to purchase
+                description: 要購買的旅程 ID
                 example: 17
               quantity:
                 type: integer
-                description: Quantity to purchase
+                description: 購買數量
                 minimum: 1
                 default: 1
                 example: 1
@@ -2172,21 +2172,21 @@ components:
       properties:
         id:
           type: integer
-          description: Order ID
+          description: 訂單 ID
           example: 123
         orderNumber:
           type: string
           description: |
-            Unique order number with format: {timestamp}{userId}{randomCode}
-            Example: 20251121011117cd5 = 2025112101 (timestamp) + 11 (userId) + 17cd5 (random)
+            唯一訂單編號，格式：{timestamp}{userId}{randomCode}
+            範例：20251121011117cd5 = 2025112101（時間戳記）+ 11（使用者 ID）+ 17cd5（隨機碼）
           example: 20251121011117cd5
         userId:
           type: integer
-          description: User ID who created this order
+          description: 建立此訂單的使用者 ID
           example: 11
         username:
           type: string
-          description: Username of the order owner
+          description: 訂單擁有者的使用者名稱
           example: john_doe
         status:
           type: string
@@ -2195,46 +2195,46 @@ components:
             - PAID
             - EXPIRED
           description: |
-            Order status:
-            - UNPAID: Order created but not yet paid
-            - PAID: Payment completed, user has journey access
-            - EXPIRED: Order expired after 3 days without payment, cannot be paid
+            訂單狀態：
+            - UNPAID: 訂單已建立但尚未付款
+            - PAID: 付款完成，使用者擁有旅程存取權
+            - EXPIRED: 訂單在 3 天後過期，無法付款
           example: UNPAID
         originalPrice:
           type: number
           format: decimal
-          description: Total original price (sum of all item original prices)
+          description: 總原價（所有項目原價的總和）
           example: 7599
         discount:
           type: number
           format: decimal
-          description: Total discount amount
+          description: 總折扣金額
           example: 0
         price:
           type: number
           format: decimal
-          description: Final amount to pay (originalPrice - discount)
+          description: 最終應付金額（originalPrice - discount）
           example: 7599
         items:
           type: array
-          description: List of order items (journeys to purchase)
+          description: 訂單項目列表（要購買的旅程）
           items:
             $ref: '#/components/schemas/OrderItem'
         createdAt:
           type: integer
           format: int64
-          description: Order creation timestamp (milliseconds since epoch)
+          description: 訂單建立時間戳記（自紀元以來的毫秒數）
           example: 1732420800000
         expiredAt:
           type: integer
           format: int64
-          description: 'Order expiration timestamp (created_at + 3 days, null if already paid)'
+          description: 訂單過期時間戳記（created_at + 3 天，若已付款則為 null）
           example: 1732680000000
           nullable: true
         paidAt:
           type: integer
           format: int64
-          description: Payment completion timestamp (null if not paid yet)
+          description: 付款完成時間戳記（若尚未付款則為 null）
           example: 1732507200000
           nullable: true
     OrderItem:
@@ -2249,30 +2249,30 @@ components:
       properties:
         journeyId:
           type: integer
-          description: Journey ID
+          description: 旅程 ID
           example: 17
         journeyTitle:
           type: string
-          description: Journey title (snapshot at order creation time)
+          description: 旅程標題（訂單建立時的快照）
           example: AI x BDD：規格驅動全自動開發術
         quantity:
           type: integer
-          description: Quantity of this journey (always 1 in MVP)
+          description: 此旅程的數量（MVP 中永遠為 1）
           example: 1
         originalPrice:
           type: number
           format: decimal
-          description: Journey price at order creation time (locked price)
+          description: 訂單建立時的旅程價格（鎖定價格）
           example: 7599
         discount:
           type: number
           format: decimal
-          description: Discount applied to this item
+          description: 套用至此項目的折扣
           example: 0
         price:
           type: number
           format: decimal
-          description: Final price for this item (originalPrice - discount)
+          description: 此項目的最終價格（originalPrice - discount）
           example: 7599
     PayOrderResponse:
       type: object
@@ -2286,31 +2286,31 @@ components:
       properties:
         id:
           type: integer
-          description: Order ID
+          description: 訂單 ID
           example: 123
         orderNumber:
           type: string
-          description: Order number
+          description: 訂單編號
           example: 20251121011117cd5
         status:
           type: string
           enum:
             - PAID
-          description: Order status (always PAID after successful payment)
+          description: 訂單狀態（成功付款後永遠為 PAID）
           example: PAID
         price:
           type: number
           format: decimal
-          description: Amount paid
+          description: 已付金額
           example: 7599
         paidAt:
           type: integer
           format: int64
-          description: Payment completion timestamp (milliseconds since epoch)
+          description: 付款完成時間戳記（自紀元以來的毫秒數）
           example: 1732507200000
         message:
           type: string
-          description: Success message
+          description: 成功訊息
           example: 付款完成
     OrderListResponse:
       type: object
@@ -2320,7 +2320,7 @@ components:
       properties:
         orders:
           type: array
-          description: List of order summaries
+          description: 訂單摘要列表
           items:
             $ref: '#/components/schemas/OrderSummary'
         pagination:
@@ -2337,11 +2337,11 @@ components:
       properties:
         id:
           type: integer
-          description: Order ID
+          description: 訂單 ID
           example: 123
         orderNumber:
           type: string
-          description: Order number
+          description: 訂單編號
           example: 20251121011117cd5
         status:
           type: string
@@ -2349,33 +2349,33 @@ components:
             - UNPAID
             - PAID
             - EXPIRED
-          description: Order status
+          description: 訂單狀態
           example: UNPAID
         price:
           type: number
           format: decimal
-          description: Final amount to pay
+          description: 最終應付金額
           example: 7599
         items:
           type: array
-          description: Simplified order items (for list display)
+          description: 簡化的訂單項目（用於列表顯示）
           items:
             $ref: '#/components/schemas/OrderItemSummary'
         createdAt:
           type: integer
           format: int64
-          description: Order creation timestamp
+          description: 訂單建立時間戳記
           example: 1732420800000
         expiredAt:
           type: integer
           format: int64
-          description: 'Order expiration timestamp (created_at + 3 days, null if already paid)'
+          description: 訂單過期時間戳記（created_at + 3 天，若已付款則為 null）
           example: 1732680000000
           nullable: true
         paidAt:
           type: integer
           format: int64
-          description: Payment completion timestamp (null if unpaid)
+          description: 付款完成時間戳記（若未付款則為 null）
           example: 1732507200000
           nullable: true
     OrderItemSummary:
@@ -2386,11 +2386,11 @@ components:
       properties:
         journeyId:
           type: integer
-          description: Journey ID
+          description: 旅程 ID
           example: 17
         journeyTitle:
           type: string
-          description: Journey title
+          description: 旅程標題
           example: AI x BDD：規格驅動全自動開發術
     Pagination:
       type: object
@@ -2401,15 +2401,15 @@ components:
       properties:
         page:
           type: integer
-          description: Current page number (starts from 1)
+          description: 目前頁碼（從 1 開始）
           example: 1
         limit:
           type: integer
-          description: Number of items per page
+          description: 每頁項目數量
           example: 20
         total:
           type: integer
-          description: Total number of items
+          description: 項目總數
           example: 5
     UserJourneyListResponse:
       type: object
@@ -2418,7 +2418,7 @@ components:
       properties:
         journeys:
           type: array
-          description: List of journeys the user has purchased
+          description: 使用者已購買的旅程列表
           items:
             $ref: '#/components/schemas/UserJourneyItem'
     UserJourneyItem:
@@ -2434,33 +2434,33 @@ components:
       properties:
         journeyId:
           type: integer
-          description: Journey ID
+          description: 旅程 ID
           example: 17
         journeyTitle:
           type: string
-          description: Journey title
+          description: 旅程標題
           example: AI x BDD：規格驅動全自動開發術
         journeySlug:
           type: string
-          description: URL-friendly journey identifier
+          description: 旅程的 URL 友善識別碼
           example: ai-bdd-spec-driven-development
         coverImageUrl:
           type: string
           format: uri
-          description: Journey cover image URL
+          description: 旅程封面圖片 URL
           example: 'https://example.com/covers/ai-bdd.jpg'
         teacherName:
           type: string
-          description: Teacher name
+          description: 教師名稱
           example: 水球潘
         purchasedAt:
           type: integer
           format: int64
-          description: Purchase timestamp - when the order was paid (milliseconds since epoch)
+          description: 購買時間戳記 - 訂單付款完成時間（自紀元以來的毫秒數）
           example: 1732507200000
         orderNumber:
           type: string
-          description: Order number that granted access to this journey
+          description: 授予此旅程存取權的訂單編號
           example: 20251121011117cd5
     UserStatus:
       type: object
@@ -2471,25 +2471,25 @@ components:
         hasPurchased:
           type: boolean
           description: |
-            Whether the user has purchased this journey.
-            - true: User owns this journey (has PAID order)
-            - false: User does not own this journey
+            使用者是否已購買此旅程。
+            - true: 使用者擁有此旅程（有已付款訂單）
+            - false: 使用者尚未擁有此旅程
           example: true
         hasUnpaidOrder:
           type: boolean
           description: |
-            Whether the user has an unpaid order for this journey.
-            - true: User has created an order but not yet paid
-            - false: User has no unpaid order
+            使用者是否有此旅程的未付款訂單。
+            - true: 使用者已建立訂單但尚未付款
+            - false: 使用者沒有未付款訂單
           example: false
         unpaidOrderId:
           type: integer
           description: |
-            The ID of the unpaid order for this journey (if hasUnpaidOrder is true).
-            Frontend can use this to redirect user to the payment page.
+            此旅程的未付款訂單 ID（如果 hasUnpaidOrder 為 true）。
+            前端可使用此 ID 將使用者導向付款頁面。
           example: 123
           nullable: true
       nullable: true
       description: |
-        User's purchase status for this journey. Only included when user is authenticated.
-        For unauthenticated requests, this field will be null.
+        使用者對此旅程的購買狀態。僅在使用者已驗證時包含。
+        對於未驗證的請求，此欄位將為 null。

@@ -2,19 +2,19 @@ register:
   post:
     tags:
       - Auth
-    summary: User registration
+    summary: 使用者註冊
     description: |
-      Register a new user with username and password.
+      使用帳號與密碼註冊新使用者。
 
-      **Rate Limiting:**
-      - Maximum 5 registrations per IP per hour
-      - Returns 400 with generic error message when rate limit exceeded (avoids information leakage)
+      **速率限制：**
+      - 每個 IP 每小時最多 5 次註冊
+      - 超過速率限制時回傳 400 與通用錯誤訊息（避免資訊洩漏）
 
-      **Validation:**
-      - Username and password must be alphanumeric with special characters allowed
-      - Both have length limits
-      - Initial experience points set to 0
-      - Redirects to login page on success
+      **驗證規則：**
+      - 使用者名稱和密碼必須為英數字元，允許特殊字元
+      - 兩者都有長度限制
+      - 初始經驗值設為 0
+      - 成功後重新導向至登入頁面
     operationId: register
     requestBody:
       required: true
@@ -24,65 +24,65 @@ register:
             $ref: '../schemas/auth.yaml#/RegisterRequest'
           examples:
             valid:
-              summary: Valid registration
+              summary: 有效的註冊
               value:
                 username: 'john_doe123'
                 password: 'SecurePass123!'
     responses:
       '201':
-        description: User registered successfully
+        description: 使用者註冊成功
         content:
           application/json:
             schema:
               $ref: '../schemas/auth.yaml#/RegisterResponse'
             examples:
               success:
-                summary: Registration successful
+                summary: 註冊成功
                 value:
-                  message: 'Registration successful'
+                  message: '註冊成功'
                   userId: 1
       '400':
-        description: Invalid request data or rate limit exceeded
+        description: 請求資料無效或超過速率限制
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               invalidFormat:
-                summary: Invalid username or password format
+                summary: 使用者名稱或密碼格式無效
                 value:
-                  error: 'Invalid username or password format'
+                  error: '使用者名稱或密碼格式無效'
               rateLimited:
-                summary: Rate limit exceeded (generic message for security)
+                summary: 超過速率限制（基於安全性的通用訊息）
                 value:
-                  error: 'Registration failed. Please try again later.'
+                  error: '註冊失敗。請稍後再試。'
       '409':
-        description: Username already exists
+        description: 使用者名稱已存在
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               duplicate:
-                summary: Username already taken
+                summary: 使用者名稱已被使用
                 value:
-                  error: 'Username already exists'
+                  error: '使用者名稱已存在'
 
 login:
   post:
     tags:
       - Auth
-    summary: User login
+    summary: 使用者登入
     description: |
-      Authenticate user with username and password.
+      使用帳號與密碼進行使用者身分驗證。
 
-      **Rate Limiting:**
-      - Maximum 5 failed attempts per IP per 15 minutes
-      - Returns 401 when rate limit exceeded (same as invalid credentials to avoid information leakage)
+      **速率限制：**
+      - 每個 IP 每 15 分鐘最多 5 次失敗嘗試
+      - 超過速率限制時回傳 401（與無效憑證相同以避免資訊洩漏）
 
-      **Security:**
-      - Returns JWT access token (expires in 1 day)
-      - Token should be included in Authorization header for protected endpoints
+      **安全性：**
+      - 回傳 JWT 存取權杖（1 天後過期）
+      - 權杖應包含在受保護端點的 Authorization 標頭中
     operationId: login
     requestBody:
       required: true
@@ -92,20 +92,20 @@ login:
             $ref: '../schemas/auth.yaml#/LoginRequest'
           examples:
             valid:
-              summary: Valid login credentials
+              summary: 有效的登入憑證
               value:
                 username: 'john_doe123'
                 password: 'SecurePass123!'
     responses:
       '200':
-        description: Login successful
+        description: 登入成功
         content:
           application/json:
             schema:
               $ref: '../schemas/auth.yaml#/LoginResponse'
             examples:
               success:
-                summary: Login successful
+                summary: 登入成功
                 value:
                   accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
                   user:
@@ -113,58 +113,58 @@ login:
                     username: 'john_doe123'
                     experience: 0
       '401':
-        description: Invalid credentials or rate limit exceeded
+        description: 憑證無效或超過速率限制
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               invalid:
-                summary: Wrong username or password
+                summary: 錯誤的使用者名稱或密碼
                 value:
-                  error: 'Invalid username or password'
+                  error: '使用者名稱或密碼無效'
               rateLimited:
-                summary: Rate limit exceeded (same error message for security)
+                summary: 超過速率限制（基於安全性使用相同錯誤訊息）
                 value:
-                  error: 'Invalid username or password'
+                  error: '使用者名稱或密碼無效'
 
 logout:
   post:
     tags:
       - Auth
-    summary: User logout
+    summary: 使用者登出
     description: |
-      Logout current user and invalidate the access token.
+      登出目前使用者並使存取權杖失效。
 
-      **Token Invalidation:**
-      - Access token is added to blacklist (stored in database)
-      - Blacklist entries auto-expire when token expires
-      - After logout, token cannot be used to access protected endpoints
+      **權杖失效化：**
+      - 存取權杖會被加入黑名單（儲存在資料庫中）
+      - 黑名單項目會在權杖過期時自動過期
+      - 登出後，權杖無法用於存取受保護的端點
 
-      **Note:** Requires valid access token in Authorization header
+      **注意：** 需要在 Authorization 標頭中提供有效的存取權杖
     operationId: logout
     security:
       - bearerAuth: []
     responses:
       '200':
-        description: Logout successful
+        description: 登出成功
         content:
           application/json:
             schema:
               $ref: '../schemas/auth.yaml#/LogoutResponse'
             examples:
               success:
-                summary: Logout successful
+                summary: 登出成功
                 value:
-                  message: 'Logout successful'
+                  message: '登出成功'
       '401':
-        description: Unauthorized - invalid or missing token
+        description: 未授權 - 權杖無效或遺失
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: Invalid or missing token
+                summary: 權杖無效或遺失
                 value:
-                  error: 'Unauthorized or invalid token'
+                  error: '未授權或權杖無效'

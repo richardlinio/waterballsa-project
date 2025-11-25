@@ -2,36 +2,36 @@ me:
   get:
     tags:
       - Users
-    summary: Get current user profile
+    summary: 取得目前使用者的個人資料
     description: |
-      Returns the current authenticated user's profile information.
+      回傳目前已認證使用者的個人資料資訊。
 
-      **Authentication:**
-      - Requires valid JWT token
+      **認證：**
+      - 需要有效的 JWT token
 
-      **Response Includes:**
-      - User ID
-      - Username
-      - Experience points (total accumulated)
-      - Current level (calculated from experience)
-      - User role (STUDENT, TEACHER, ADMIN)
+      **回應包含：**
+      - 使用者 ID
+      - 使用者名稱
+      - 經驗值（累計總數）
+      - 目前等級（從經驗值計算）
+      - 使用者角色（STUDENT、TEACHER、ADMIN）
 
-      **Level Information:**
-      - Level is calculated based on total experience points
-      - Maximum level is 36 (requires 65000+ XP)
+      **等級資訊：**
+      - 等級根據總經驗值計算
+      - 最高等級為 36（需要 65000+ XP）
     operationId: getCurrentUser
     security:
       - bearerAuth: []
     responses:
       '200':
-        description: Successfully retrieved user profile
+        description: 成功取得使用者個人資料
         content:
           application/json:
             schema:
               $ref: '../schemas/users.yaml#/UserProfile'
             examples:
               student:
-                summary: Student user profile
+                summary: 學生使用者個人資料
                 value:
                   id: 1
                   username: 'john_doe123'
@@ -39,7 +39,7 @@ me:
                   level: 4
                   role: 'STUDENT'
               highLevel:
-                summary: High-level student
+                summary: 高等級學生
                 value:
                   id: 2
                   username: 'advanced_learner'
@@ -47,53 +47,53 @@ me:
                   level: 11
                   role: 'STUDENT'
       '401':
-        description: Unauthorized - invalid or missing token
+        description: 未授權 - 無效或遺失的 token
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: Invalid or missing token
+                summary: 無效或遺失的 token
                 value:
-                  error: 'Unauthorized or invalid token'
+                  error: '未授權或無效的 token'
       '404':
-        description: Not Found - user profile not found
+        description: 找不到 - 找不到使用者個人資料
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: User not found
+                summary: 找不到使用者
                 value:
-                  error: 'User not found'
+                  error: '找不到使用者'
 
 journeys:
   get:
     tags:
       - Users
-    summary: Get user's purchased journeys
+    summary: 取得使用者已購買的旅程
     description: |
-      Returns a list of journeys that the user has purchased (has access to).
+      回傳使用者已購買（可存取）的旅程清單。
 
-      **Authentication Required:**
-      - User must be logged in
-      - User can only view their own purchased journeys (returns 404 if trying to access another user's journeys)
+      **需要認證：**
+      - 使用者必須已登入
+      - 使用者只能查看自己購買的旅程（嘗試存取其他使用者的旅程會回傳 404）
 
-      **Use Cases:**
-      - Check if user has purchased a specific journey
-      - Display user's course library
-      - Verify journey access before allowing content viewing
+      **使用案例：**
+      - 檢查使用者是否已購買特定旅程
+      - 顯示使用者的課程庫
+      - 在允許查看內容前驗證旅程存取權
 
-      **Response:**
-      - List of purchased journeys with basic information
-      - Purchase timestamp (when payment was completed)
-      - Related order number for reference
+      **回應：**
+      - 已購買旅程清單及基本資訊
+      - 購買時間戳記（付款完成時間）
+      - 相關訂單編號供參考
 
-      **Note:**
-      - Only includes journeys with PAID orders (UNPAID orders do not grant access)
-      - Frontend can use this list to determine whether to show "繼續學習" or "立即加入課程" button
+      **注意：**
+      - 僅包含已付款訂單的旅程（未付款訂單不授予存取權）
+      - 前端可使用此清單來決定要顯示「繼續學習」或「立即加入課程」按鈕
     operationId: getUserJourneys
     security:
       - bearerAuth: []
@@ -101,20 +101,20 @@ journeys:
       - name: userId
         in: path
         required: true
-        description: User ID
+        description: 使用者 ID
         schema:
           type: integer
           example: 11
     responses:
       '200':
-        description: Successfully retrieved user's purchased journeys
+        description: 成功取得使用者已購買的旅程
         content:
           application/json:
             schema:
               $ref: '../schemas/users.yaml#/UserJourneyListResponse'
             examples:
               success:
-                summary: User's purchased journey list
+                summary: 使用者已購買的旅程清單
                 value:
                   journeys:
                     - journeyId: 17
@@ -132,56 +132,56 @@ journeys:
                       purchasedAt: 1732334400000
                       orderNumber: '20251119011115b2c'
               empty:
-                summary: User has no purchased journeys
+                summary: 使用者沒有已購買的旅程
                 value:
                   journeys: []
       '401':
-        description: Unauthorized - user not logged in
+        description: 未授權 - 使用者未登入
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: User not authenticated
+                summary: 使用者未認證
                 value:
-                  error: 'Authentication required'
+                  error: '需要身份驗證'
       '404':
-        description: User not found or access denied
+        description: 找不到使用者或存取被拒絕
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: User does not exist or access denied
+                summary: 使用者不存在或存取被拒絕
                 value:
-                  error: 'User not found'
+                  error: '找不到使用者'
 
 orders:
   get:
     tags:
       - Users
-    summary: Get user's order list
+    summary: 取得使用者的訂單清單
     description: |
-      Returns a list of orders for a specific user.
+      回傳特定使用者的訂單清單。
 
-      **Authentication Required:**
-      - User must be logged in
-      - User can only view their own orders (returns 404 if trying to access another user's orders)
+      **需要認證：**
+      - 使用者必須已登入
+      - 使用者只能查看自己的訂單（嘗試存取其他使用者的訂單會回傳 404）
 
-      **Use Cases:**
-      - Display order list in "訂單管理" section
-      - Allow users to review their order history
+      **使用案例：**
+      - 在「訂單管理」區域顯示訂單清單
+      - 讓使用者查看訂單歷史記錄
 
-      **Query Parameters:**
-      - page: Page number for pagination (optional, default: 1)
-      - limit: Items per page (optional, default: 20)
+      **查詢參數：**
+      - page：分頁的頁碼（選填，預設：1）
+      - limit：每頁項目數（選填，預設：20）
 
-      **Response:**
-      - List of all order summaries (basic order info + first journey item)
-      - Pagination metadata
-      - Orders are sorted by creation time (newest first)
+      **回應：**
+      - 所有訂單摘要清單（基本訂單資訊 + 第一個旅程項目）
+      - 分頁中繼資料
+      - 訂單按建立時間排序（最新的在前）
     operationId: getUserOrders
     security:
       - bearerAuth: []
@@ -189,14 +189,14 @@ orders:
       - name: userId
         in: path
         required: true
-        description: User ID
+        description: 使用者 ID
         schema:
           type: integer
           example: 11
       - name: page
         in: query
         required: false
-        description: Page number (starts from 1)
+        description: 頁碼（從 1 開始）
         schema:
           type: integer
           minimum: 1
@@ -205,7 +205,7 @@ orders:
       - name: limit
         in: query
         required: false
-        description: Number of items per page
+        description: 每頁項目數
         schema:
           type: integer
           minimum: 1
@@ -214,14 +214,14 @@ orders:
           example: 20
     responses:
       '200':
-        description: Successfully retrieved order list
+        description: 成功取得訂單清單
         content:
           application/json:
             schema:
               $ref: '../schemas/orders.yaml#/OrderListResponse'
             examples:
               success:
-                summary: User order list with pagination
+                summary: 使用者訂單清單（含分頁）
                 value:
                   orders:
                     - id: 125
@@ -246,24 +246,24 @@ orders:
                     limit: 20
                     total: 2
       '401':
-        description: Unauthorized - user not logged in
+        description: 未授權 - 使用者未登入
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: User not authenticated
+                summary: 使用者未認證
                 value:
-                  error: 'Authentication required'
+                  error: '需要身份驗證'
       '404':
-        description: User not found or access denied
+        description: 找不到使用者或存取被拒絕
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: User does not exist or access denied
+                summary: 使用者不存在或存取被拒絕
                 value:
-                  error: 'User not found'
+                  error: '找不到使用者'

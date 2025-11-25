@@ -14,15 +14,15 @@ MissionDetail:
   properties:
     id:
       type: integer
-      description: Mission ID
+      description: 任務 ID
       example: 1
     chapterId:
       type: integer
-      description: Chapter ID this mission belongs to
+      description: 此任務所屬的章節 ID
       example: 8
     journeyId:
       type: integer
-      description: Journey ID (derived from chapter)
+      description: 旅程 ID（從章節衍生）
       example: 1
     type:
       type: string
@@ -30,34 +30,34 @@ MissionDetail:
         - VIDEO
         - ARTICLE
         - QUESTIONNAIRE
-      description: Mission type
+      description: 任務類型
       example: 'VIDEO'
     title:
       type: string
-      description: Mission title
+      description: 任務標題
       example: '課程介紹：這門課手把手帶你成為架構設計的高手'
     description:
       type: string
-      description: Detailed description of the mission
+      description: 任務的詳細描述
       example: '思維升級：Christopher Alexander 模式六大要素及模式語言'
     isFreePreview:
       type: boolean
-      description: Whether this mission is free to preview
+      description: 此任務是否可免費預覽
       example: true
     createdAt:
       type: integer
       format: int64
-      description: Creation timestamp in milliseconds
+      description: 建立時間戳記（毫秒）
       example: 1733294001561
     videoLength:
       type: string
-      description: Video duration in MM:SS format (VIDEO type only, derived from content)
+      description: 影片時長，格式為 MM:SS（僅限 VIDEO 類型，從內容衍生）
       example: '04:16'
     reward:
       $ref: '#/MissionReward'
     resource:
       type: array
-      description: Mission resource array (can have multiple items)
+      description: 任務資源陣列（可包含多個項目）
       items:
         $ref: '#/MissionResource'
 
@@ -68,7 +68,7 @@ MissionReward:
   properties:
     exp:
       type: integer
-      description: Experience points reward
+      description: 經驗值獎勵
       example: 100
 
 MissionResource:
@@ -79,7 +79,7 @@ MissionResource:
   properties:
     id:
       type: integer
-      description: Resource item ID
+      description: 資源項目 ID
       example: 0
     type:
       type: string
@@ -87,20 +87,20 @@ MissionResource:
         - video
         - article
         - form
-      description: Resource type (lowercase)
+      description: 資源類型（小寫）
       example: 'video'
     resourceUrl:
       type: string
       format: uri
-      description: Resource URL (optional, required for video/external content)
+      description: 資源 URL（選填，影片/外部內容必填）
       example: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
     resourceContent:
       type: string
-      description: Resource content (optional, for inline text content)
+      description: 資源內容（選填，用於內嵌文字內容）
       example: 'Article content or form HTML here'
     durationSeconds:
       type: integer
-      description: Video duration in seconds (VIDEO type only)
+      description: 影片時長（秒）（僅限 VIDEO 類型）
       example: 256
 
 UpdateProgressRequest:
@@ -110,7 +110,7 @@ UpdateProgressRequest:
   properties:
     watchPositionSeconds:
       type: integer
-      description: Current watch position in seconds (for VIDEO missions)
+      description: 目前觀看位置（秒）（用於 VIDEO 任務）
       example: 150
       minimum: 0
 
@@ -123,11 +123,11 @@ ProgressUpdateResponse:
   properties:
     missionId:
       type: integer
-      description: Mission ID
+      description: 任務 ID
       example: 1
     watchPositionSeconds:
       type: integer
-      description: Updated watch position (for VIDEO missions)
+      description: 更新後的觀看位置（用於 VIDEO 任務）
       example: 150
     status:
       type: string
@@ -135,7 +135,7 @@ ProgressUpdateResponse:
         - UNCOMPLETED
         - COMPLETED
         - DELIVERED
-      description: Current mission status after update
+      description: 更新後的任務狀態
       example: UNCOMPLETED
 
 DeliverResponse:
@@ -148,19 +148,19 @@ DeliverResponse:
   properties:
     message:
       type: string
-      description: Success message
+      description: 成功訊息
       example: 'Mission delivered successfully'
     experienceGained:
       type: integer
-      description: Experience points gained from this delivery
+      description: 此次交付獲得的經驗值
       example: 100
     totalExperience:
       type: integer
-      description: User's total experience points after delivery
+      description: 交付後使用者的總經驗值
       example: 1500
     currentLevel:
       type: integer
-      description: User's current level after delivery
+      description: 交付後使用者的目前等級
       example: 4
 
 UserMissionProgress:
@@ -172,7 +172,7 @@ UserMissionProgress:
   properties:
     missionId:
       type: integer
-      description: Mission ID
+      description: 任務 ID
       example: 1
     status:
       type: string
@@ -180,9 +180,9 @@ UserMissionProgress:
         - UNCOMPLETED
         - COMPLETED
         - DELIVERED
-      description: Mission status
+      description: 任務狀態
       example: COMPLETED
     watchPositionSeconds:
       type: integer
-      description: Current watch position in seconds (for VIDEO missions)
+      description: 目前觀看位置（秒）（用於 VIDEO 任務）
       example: 256

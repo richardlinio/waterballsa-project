@@ -2,25 +2,25 @@ detail:
   get:
     tags:
       - Progress
-    summary: Get user's mission progress
+    summary: 取得使用者的任務進度
     description: |
-      Returns the user's progress for a specific mission.
+      回傳使用者特定任務的進度。
 
-      **Authentication:**
-      - Requires valid JWT token
+      **認證：**
+      - 需要有效的 JWT token
 
-      **Response Includes:**
-      - Mission ID
-      - Current status (UNCOMPLETED, COMPLETED, DELIVERED)
-      - Watch position in seconds (for VIDEO missions)
+      **回應包含：**
+      - 任務 ID
+      - 目前狀態（UNCOMPLETED、COMPLETED、DELIVERED）
+      - 觀看位置（秒數）（針對影片任務）
 
-      **Status Meanings:**
-      - UNCOMPLETED: Mission in progress or not started
-      - COMPLETED: Mission completed but not delivered yet
-      - DELIVERED: Mission delivered and rewards received
+      **狀態含義：**
+      - UNCOMPLETED：任務進行中或尚未開始
+      - COMPLETED：任務已完成但尚未交付
+      - DELIVERED：任務已交付且獎勵已領取
 
-      **Note:**
-      - For missions without progress record, returns default UNCOMPLETED status with watchPositionSeconds: 0
+      **注意：**
+      - 對於沒有進度記錄的任務，回傳預設的 UNCOMPLETED 狀態，watchPositionSeconds 為 0
     operationId: getUserMissionProgress
     security:
       - bearerAuth: []
@@ -28,117 +28,117 @@ detail:
       - name: userId
         in: path
         required: true
-        description: User ID
+        description: 使用者 ID
         schema:
           type: integer
           example: 1
       - name: missionId
         in: path
         required: true
-        description: Mission ID
+        description: 任務 ID
         schema:
           type: integer
           example: 1
     responses:
       '200':
-        description: Successfully retrieved mission progress
+        description: 成功取得任務進度
         content:
           application/json:
             schema:
               $ref: '../schemas/missions.yaml#/UserMissionProgress'
             examples:
               videoNotStarted:
-                summary: Video mission not started
+                summary: 影片任務尚未開始
                 value:
                   missionId: 1
                   status: 'UNCOMPLETED'
                   watchPositionSeconds: 0
               videoInProgress:
-                summary: Video mission in progress
+                summary: 影片任務進行中
                 value:
                   missionId: 1
                   status: 'UNCOMPLETED'
                   watchPositionSeconds: 150
               videoCompleted:
-                summary: Video mission completed but not delivered
+                summary: 影片任務已完成但尚未交付
                 value:
                   missionId: 1
                   status: 'COMPLETED'
                   watchPositionSeconds: 256
               missionDelivered:
-                summary: Mission delivered
+                summary: 任務已交付
                 value:
                   missionId: 1
                   status: 'DELIVERED'
                   watchPositionSeconds: 256
       '401':
-        description: Unauthorized - invalid or missing token
+        description: 未授權 - 無效或遺失的 token
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: Invalid or missing token
+                summary: 無效或遺失的 token
                 value:
-                  error: 'Unauthorized or invalid token'
+                  error: '未授權或無效的 token'
       '403':
-        description: Forbidden - cannot access other user's progress
+        description: 禁止 - 無法存取其他使用者的進度
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               forbidden:
-                summary: Cannot access other user's progress
+                summary: 無法存取其他使用者的進度
                 value:
-                  error: 'Cannot access progress for other users'
+                  error: '無法存取其他使用者的進度'
       '404':
-        description: Mission not found
+        description: 找不到任務
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: Mission does not exist
+                summary: 任務不存在
                 value:
-                  error: 'Mission not found'
+                  error: '找不到任務'
 
   put:
     tags:
       - Progress
-    summary: Update user's mission progress
+    summary: 更新使用者的任務進度
     description: |
-      Updates the user's progress for a specific mission (upsert operation - creates if not exists).
+      更新使用者特定任務的進度（upsert 操作 - 不存在則建立）。
 
-      **Authentication:**
-      - Requires valid JWT token
-      - User can only update their own progress
+      **認證：**
+      - 需要有效的 JWT token
+      - 使用者只能更新自己的進度
 
-      **Progress Tracking:**
-      - For VIDEO missions:
-        - Frontend calls this API every 10 seconds during video playback
-        - Send watchPositionSeconds to update progress
-        - Backend automatically checks if watchPositionSeconds == durationSeconds
-        - When equal, mission status becomes "COMPLETED" but NOT "DELIVERED"
-        - Progress can be updated multiple times (for rewatching)
+      **進度追蹤：**
+      - 針對影片任務：
+        - 前端在影片播放期間每 10 秒呼叫此 API
+        - 傳送 watchPositionSeconds 來更新進度
+        - 後端自動檢查 watchPositionSeconds == durationSeconds
+        - 當相等時，任務狀態變為「COMPLETED」但不是「DELIVERED」
+        - 進度可以多次更新（用於重新觀看）
 
-      - For ARTICLE and QUESTIONNAIRE missions:
-        - No progress tracking needed
-        - User directly delivers the mission to mark as completed
+      - 針對文章和問卷任務：
+        - 不需要進度追蹤
+        - 使用者直接交付任務以標記為完成
 
-      **Status Transitions:**
-      - UNCOMPLETED → COMPLETED: When video reaches end (watchPositionSeconds == durationSeconds)
-      - User must manually deliver (via deliver endpoint) to get experience points and change to DELIVERED status
+      **狀態轉換：**
+      - UNCOMPLETED → COMPLETED：當影片播放到結尾時（watchPositionSeconds == durationSeconds）
+      - 使用者必須手動交付（透過 deliver 端點）以獲得經驗值並變更為 DELIVERED 狀態
 
-      **Upsert Behavior:**
-      - If progress record doesn't exist, creates new record with provided watchPositionSeconds
-      - If progress record exists, updates the watchPositionSeconds
+      **Upsert 行為：**
+      - 如果進度記錄不存在，建立新記錄並使用提供的 watchPositionSeconds
+      - 如果進度記錄存在，更新 watchPositionSeconds
 
-      **Note:**
-      - This endpoint does NOT grant experience points
-      - Experience points are only granted via deliver endpoint
+      **注意：**
+      - 此端點不授予經驗值
+      - 經驗值僅透過 deliver 端點授予
     operationId: updateUserMissionProgress
     security:
       - bearerAuth: []
@@ -146,14 +146,14 @@ detail:
       - name: userId
         in: path
         required: true
-        description: User ID
+        description: 使用者 ID
         schema:
           type: integer
           example: 1
       - name: missionId
         in: path
         required: true
-        description: Mission ID
+        description: 任務 ID
         schema:
           type: integer
           example: 1
@@ -165,114 +165,114 @@ detail:
             $ref: '../schemas/missions.yaml#/UpdateProgressRequest'
           examples:
             videoInProgress:
-              summary: Update video progress to 150 seconds
+              summary: 更新影片進度至 150 秒
               value:
                 watchPositionSeconds: 150
             videoCompleted:
-              summary: Update video progress to completion (256 seconds)
+              summary: 更新影片進度至完成（256 秒）
               value:
                 watchPositionSeconds: 256
     responses:
       '200':
-        description: Progress updated successfully
+        description: 進度更新成功
         content:
           application/json:
             schema:
               $ref: '../schemas/missions.yaml#/ProgressUpdateResponse'
             examples:
               videoInProgress:
-                summary: 'Video progress updated (status: UNCOMPLETED)'
+                summary: 影片進度已更新（狀態：UNCOMPLETED）
                 value:
                   missionId: 1
                   watchPositionSeconds: 150
                   status: 'UNCOMPLETED'
               videoCompleted:
-                summary: 'Video progress updated (status: COMPLETED)'
+                summary: 影片進度已更新（狀態：COMPLETED）
                 value:
                   missionId: 1
                   watchPositionSeconds: 256
                   status: 'COMPLETED'
       '400':
-        description: Invalid request data
+        description: 無效的請求資料
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               invalidProgress:
-                summary: Invalid watch position
+                summary: 無效的觀看位置
                 value:
-                  error: 'Invalid watch position: must be between 0 and video duration'
+                  error: '無效的觀看位置：必須介於 0 和影片長度之間'
       '401':
-        description: Unauthorized - invalid or missing token
+        description: 未授權 - 無效或遺失的 token
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: Invalid or missing token
+                summary: 無效或遺失的 token
                 value:
-                  error: 'Unauthorized or invalid token'
+                  error: '未授權或無效的 token'
       '403':
-        description: Forbidden - cannot update other user's progress
+        description: 禁止 - 無法更新其他使用者的進度
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               forbidden:
-                summary: Cannot update other user's progress
+                summary: 無法更新其他使用者的進度
                 value:
-                  error: 'Cannot update progress for other users'
+                  error: '無法更新其他使用者的進度'
       '404':
-        description: Mission not found
+        description: 找不到任務
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: Mission does not exist
+                summary: 任務不存在
                 value:
-                  error: 'Mission not found'
+                  error: '找不到任務'
 
 deliver:
   post:
     tags:
       - Progress
-    summary: Deliver mission for experience points
+    summary: 交付任務以獲得經驗值
     description: |
-      Deliver a completed mission to receive experience points and change status to DELIVERED.
+      交付已完成的任務以獲得經驗值並將狀態變更為 DELIVERED。
 
-      **Authentication:**
-      - Requires valid JWT token
-      - User can only deliver their own progress
+      **認證：**
+      - 需要有效的 JWT token
+      - 使用者只能交付自己的進度
 
-      **Requirements:**
-      - For VIDEO missions: Must have status COMPLETED (watched to the end)
-      - For ARTICLE/QUESTIONNAIRE missions: Can be delivered directly (no progress tracking)
-      - Cannot deliver if mission status is already DELIVERED
-      - Each mission can only be delivered once
+      **要求：**
+      - 針對影片任務：必須具有 COMPLETED 狀態（已觀看至結尾）
+      - 針對文章/問卷任務：可以直接交付（無需進度追蹤）
+      - 如果任務狀態已經是 DELIVERED 則無法交付
+      - 每個任務只能交付一次
 
-      **Effects:**
-      - Changes progress status from COMPLETED (or UNCOMPLETED for non-video) to DELIVERED
-      - Adds experience points to user (amount defined in mission rewards)
-      - Updates user level based on new experience points
+      **效果：**
+      - 將進度狀態從 COMPLETED（或非影片任務的 UNCOMPLETED）變更為 DELIVERED
+      - 將經驗值新增至使用者（數量定義於任務獎勵中）
+      - 根據新的經驗值更新使用者等級
 
-      **Level Calculation:**
-      - Level 1: 0-199 XP
-      - Level 2: 200-499 XP
-      - Level 3: 500-1499 XP
-      - Level 4: 1500-2999 XP
-      - Level 5: 3000-4999 XP
-      - Level 6: 5000-6999 XP
-      - Level 7+: +2000 XP per level
-      - Level 36 (max): 65000+ XP
+      **等級計算：**
+      - 等級 1：0-199 XP
+      - 等級 2：200-499 XP
+      - 等級 3：500-1499 XP
+      - 等級 4：1500-2999 XP
+      - 等級 5：3000-4999 XP
+      - 等級 6：5000-6999 XP
+      - 等級 7+：每級 +2000 XP
+      - 等級 36（最高）：65000+ XP
 
-      **Note:**
-      - Experience points are only granted once per mission
-      - Duplicate deliveries return 409 Conflict
+      **注意：**
+      - 經驗值每個任務僅授予一次
+      - 重複交付回傳 409 Conflict
     operationId: deliverMission
     security:
       - bearerAuth: []
@@ -280,91 +280,91 @@ deliver:
       - name: userId
         in: path
         required: true
-        description: User ID
+        description: 使用者 ID
         schema:
           type: integer
           example: 1
       - name: missionId
         in: path
         required: true
-        description: Mission ID
+        description: 任務 ID
         schema:
           type: integer
           example: 1
     responses:
       '200':
-        description: Mission delivered successfully
+        description: 任務交付成功
         content:
           application/json:
             schema:
               $ref: '../schemas/missions.yaml#/DeliverResponse'
             examples:
               success:
-                summary: Successfully delivered and gained experience
+                summary: 成功交付並獲得經驗值
                 value:
-                  message: 'Mission delivered successfully'
+                  message: '任務交付成功'
                   experienceGained: 100
                   totalExperience: 1500
                   currentLevel: 4
               levelUp:
-                summary: Delivered and leveled up
+                summary: 交付並升級
                 value:
-                  message: 'Mission delivered successfully'
+                  message: '任務交付成功'
                   experienceGained: 100
                   totalExperience: 3000
                   currentLevel: 5
       '400':
-        description: Mission not completed or invalid state
+        description: 任務未完成或狀態無效
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               videoNotCompleted:
-                summary: Cannot deliver incomplete video mission
+                summary: 無法交付未完成的影片任務
                 value:
-                  error: 'Video mission must be COMPLETED before delivery'
+                  error: '影片任務必須為 COMPLETED 狀態才能交付'
       '401':
-        description: Unauthorized - invalid or missing token
+        description: 未授權 - 無效或遺失的 token
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: Invalid or missing token
+                summary: 無效或遺失的 token
                 value:
-                  error: 'Unauthorized or invalid token'
+                  error: '未授權或無效的 token'
       '403':
-        description: Forbidden - cannot deliver other user's progress
+        description: 禁止 - 無法交付其他使用者的進度
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               forbidden:
-                summary: Cannot deliver other user's progress
+                summary: 無法交付其他使用者的進度
                 value:
-                  error: 'Cannot deliver progress for other users'
+                  error: '無法交付其他使用者的進度'
       '404':
-        description: Mission not found
+        description: 找不到任務
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: Mission does not exist
+                summary: 任務不存在
                 value:
-                  error: 'Mission not found'
+                  error: '找不到任務'
       '409':
-        description: Mission already delivered
+        description: 任務已交付
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               duplicate:
-                summary: Cannot deliver twice
+                summary: 無法交付兩次
                 value:
-                  error: 'Mission has already been delivered'
+                  error: '任務已經交付過了'

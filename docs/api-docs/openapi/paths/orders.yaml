@@ -2,27 +2,27 @@ create:
   post:
     tags:
       - Orders
-    summary: Create an order
+    summary: 建立訂單
     description: |
-      Creates a new order for a journey purchase.
+      為旅程購買建立新訂單。
 
-      **Authentication Required:**
-      - User must be logged in to create an order
+      **需要認證：**
+      - 使用者必須已登入才能建立訂單
 
-      **Business Logic:**
-      - One order can only contain one journey (MVP scope)
-      - If user has already purchased the journey: returns 409 Conflict
-      - If user already has an unpaid order for this journey: returns the existing order (200 OK)
-      - Order number format: `{timestamp}{userId}{randomCode}`
-        - Example: `20251121011117cd5` = `2025112101` (timestamp) + `11` (userId) + `17cd5` (random code)
-      - Journey price is locked at order creation time (from journeys.price)
-      - Order status defaults to UNPAID
-      - Order expiration time is set to created_at + 3 days
-      - Orders automatically expire after 3 days if not paid (status changes to EXPIRED)
+      **業務邏輯：**
+      - 一個訂單只能包含一個旅程（MVP 範圍）
+      - 如果使用者已購買該旅程：回傳 409 Conflict
+      - 如果使用者已有該旅程的未付款訂單：回傳現有訂單（200 OK）
+      - 訂單編號格式：`{timestamp}{userId}{randomCode}`
+        - 範例：`20251121011117cd5` = `2025112101`（時間戳記）+ `11`（userId）+ `17cd5`（隨機碼）
+      - 旅程價格在訂單建立時鎖定（來自 journeys.price）
+      - 訂單狀態預設為 UNPAID
+      - 訂單到期時間設定為 created_at + 3 天
+      - 如果 3 天內未付款，訂單自動過期（狀態變更為 EXPIRED）
 
-      **Next Steps:**
-      - Frontend should redirect to order payment page
-      - User can complete payment via POST /orders/{orderId}/pay
+      **後續步驟：**
+      - 前端應重新導向至訂單付款頁面
+      - 使用者可透過 POST /orders/{orderId}/pay 完成付款
     operationId: createOrder
     security:
       - bearerAuth: []
@@ -34,21 +34,21 @@ create:
             $ref: '../schemas/orders.yaml#/CreateOrderRequest'
           examples:
             create:
-              summary: Create order for a journey
+              summary: 為旅程建立訂單
               value:
                 items:
                   - journeyId: 17
                     quantity: 1
     responses:
       '201':
-        description: Order created successfully
+        description: 訂單建立成功
         content:
           application/json:
             schema:
               $ref: '../schemas/orders.yaml#/OrderResponse'
             examples:
               created:
-                summary: New order created
+                summary: 新訂單已建立
                 value:
                   id: 123
                   orderNumber: '20251121011117cd5'
@@ -69,14 +69,14 @@ create:
                   expiredAt: 1732680000000
                   paidAt: null
       '200':
-        description: User already has an unpaid order for this journey, returning existing order
+        description: 使用者已有該旅程的未付款訂單，回傳現有訂單
         content:
           application/json:
             schema:
               $ref: '../schemas/orders.yaml#/OrderResponse'
             examples:
               existing:
-                summary: Existing unpaid order returned
+                summary: 回傳現有未付款訂單
                 value:
                   id: 120
                   orderNumber: '20251120011117a8f'
@@ -97,47 +97,47 @@ create:
                   expiredAt: 1732593600000
                   paidAt: null
       '400':
-        description: Bad request - invalid journey ID
+        description: 錯誤的請求 - 無效的旅程 ID
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               invalidJourney:
-                summary: Invalid journey ID
+                summary: 無效的旅程 ID
                 value:
-                  error: 'Invalid journey ID'
+                  error: '無效的旅程 ID'
       '401':
-        description: Unauthorized - user not logged in
+        description: 未授權 - 使用者未登入
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: User not authenticated
+                summary: 使用者未認證
                 value:
-                  error: 'Authentication required'
+                  error: '需要身份驗證'
       '404':
-        description: Journey not found
+        description: 找不到旅程
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: Journey does not exist
+                summary: 旅程不存在
                 value:
-                  error: 'Journey not found'
+                  error: '找不到旅程'
       '409':
-        description: Conflict - user has already purchased this journey
+        description: 衝突 - 使用者已購買此旅程
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               alreadyPurchased:
-                summary: User already owns this journey
+                summary: 使用者已擁有此旅程
                 value:
                   error: '你已經購買此課程'
 
@@ -145,23 +145,23 @@ detail:
   get:
     tags:
       - Orders
-    summary: Get order details
+    summary: 取得訂單詳細資訊
     description: |
-      Returns detailed information about a specific order.
+      回傳特定訂單的詳細資訊。
 
-      **Authentication Required:**
-      - User must be logged in
-      - User can only view their own orders (returns 404 if trying to access another user's order)
+      **需要認證：**
+      - 使用者必須已登入
+      - 使用者只能查看自己的訂單（嘗試存取其他使用者的訂單會回傳 404）
 
-      **Use Cases:**
-      - Display order information on payment page ("完成支付" stage)
-      - Display order confirmation after payment ("購買完成" stage)
-      - Review order history
+      **使用案例：**
+      - 在付款頁面顯示訂單資訊（「完成支付」階段）
+      - 付款後顯示訂單確認（「購買完成」階段）
+      - 查看訂單歷史記錄
 
-      **Response:**
-      - Order basic information (order number, status, prices)
-      - Order items (journey information)
-      - Timestamps (created_at, paid_at if applicable)
+      **回應：**
+      - 訂單基本資訊（訂單編號、狀態、價格）
+      - 訂單項目（旅程資訊）
+      - 時間戳記（created_at、paid_at（如適用））
     operationId: getOrderDetail
     security:
       - bearerAuth: []
@@ -169,20 +169,20 @@ detail:
       - name: orderId
         in: path
         required: true
-        description: Order ID
+        description: 訂單 ID
         schema:
           type: integer
           example: 123
     responses:
       '200':
-        description: Successfully retrieved order details
+        description: 成功取得訂單詳細資訊
         content:
           application/json:
             schema:
               $ref: '../schemas/orders.yaml#/OrderResponse'
             examples:
               unpaid:
-                summary: Unpaid order
+                summary: 未付款訂單
                 value:
                   id: 123
                   orderNumber: '20251121011117cd5'
@@ -203,7 +203,7 @@ detail:
                   expiredAt: 1732680000000
                   paidAt: null
               paid:
-                summary: Paid order
+                summary: 已付款訂單
                 value:
                   id: 123
                   orderNumber: '20251121011117cd5'
@@ -224,7 +224,7 @@ detail:
                   expiredAt: null
                   paidAt: 1732507200000
               expired:
-                summary: Expired order
+                summary: 已過期訂單
                 value:
                   id: 124
                   orderNumber: '20251118011117xyz'
@@ -245,51 +245,51 @@ detail:
                   expiredAt: 1732420800000
                   paidAt: null
       '401':
-        description: Unauthorized - user not logged in
+        description: 未授權 - 使用者未登入
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: User not authenticated
+                summary: 使用者未認證
                 value:
-                  error: 'Authentication required'
+                  error: '需要身份驗證'
       '404':
-        description: Order not found or user does not have permission to view this order
+        description: 找不到訂單或使用者沒有查看此訂單的權限
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: Order does not exist or access denied
+                summary: 訂單不存在或存取被拒絕
                 value:
-                  error: 'Order not found'
+                  error: '找不到訂單'
 
 pay:
   post:
     tags:
       - Orders
-    summary: Complete order payment
+    summary: 完成訂單付款
     description: |
-      Completes payment for an order and grants journey access to the user.
+      完成訂單付款並授予使用者旅程存取權。
 
-      **Authentication Required:**
-      - User must be logged in
-      - User can only pay for their own orders
+      **需要認證：**
+      - 使用者必須已登入
+      - 使用者只能支付自己的訂單
 
-      **Business Logic:**
-      - Order status must be UNPAID (EXPIRED orders cannot be paid)
-      - After successful payment:
-        - Order status changes to PAID
-        - paid_at timestamp is set
-        - User gains access to the journey (record created in user_journeys table)
-      - Payment is simulated (no actual payment gateway integration in MVP)
+      **業務邏輯：**
+      - 訂單狀態必須為 UNPAID（已過期的訂單無法付款）
+      - 付款成功後：
+        - 訂單狀態變更為 PAID
+        - 設定 paid_at 時間戳記
+        - 使用者獲得旅程存取權（在 user_journeys 表中建立記錄）
+      - 付款為模擬（MVP 中沒有整合實際的付款閘道）
 
-      **Note:**
-      - In MVP, clicking "立即支付" button automatically completes the purchase
-      - Real payment integration can be added in future releases
+      **注意：**
+      - 在 MVP 中，點擊「立即支付」按鈕會自動完成購買
+      - 實際的付款整合可在未來版本中加入
     operationId: payOrder
     security:
       - bearerAuth: []
@@ -297,20 +297,20 @@ pay:
       - name: orderId
         in: path
         required: true
-        description: Order ID
+        description: 訂單 ID
         schema:
           type: integer
           example: 123
     responses:
       '200':
-        description: Payment completed successfully
+        description: 付款完成成功
         content:
           application/json:
             schema:
               $ref: '../schemas/orders.yaml#/PayOrderResponse'
             examples:
               success:
-                summary: Payment successful
+                summary: 付款成功
                 value:
                   id: 123
                   orderNumber: '20251121011117cd5'
@@ -319,39 +319,39 @@ pay:
                   paidAt: 1732507200000
                   message: '付款完成'
       '401':
-        description: Unauthorized - user not logged in
+        description: 未授權 - 使用者未登入
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: User not authenticated
+                summary: 使用者未認證
                 value:
-                  error: 'Authentication required'
+                  error: '需要身份驗證'
       '404':
-        description: Order not found or user does not have permission
+        description: 找不到訂單或使用者沒有權限
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: Order does not exist or access denied
+                summary: 訂單不存在或存取被拒絕
                 value:
-                  error: 'Order not found'
+                  error: '找不到訂單'
       '409':
-        description: Conflict - order is already paid or expired
+        description: 衝突 - 訂單已付款或已過期
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               alreadyPaid:
-                summary: Order already completed
+                summary: 訂單已完成
                 value:
                   error: '訂單已付款'
               expired:
-                summary: Order has expired
+                summary: 訂單已過期
                 value:
                   error: '訂單已過期'

@@ -2,30 +2,30 @@ detail:
   get:
     tags:
       - Missions
-    summary: Get mission details
+    summary: 取得任務詳細資訊
     description: |
-      Returns detailed information about a specific mission including content and rewards.
+      回傳特定任務的詳細資訊，包括內容和獎勵。
 
-      **Note:** This endpoint does NOT include user progress. Use GET /users/{userId}/missions/{missionId}/progress for progress information.
+      **注意：** 此端點不包含使用者進度。請使用 GET /users/{userId}/missions/{missionId}/progress 來取得進度資訊。
 
-      **Authentication:**
-      - Requires valid JWT token
+      **認證：**
+      - 需要有效的 JWT token
 
-      **Response Includes:**
-      - Mission basic information (id, chapterId, journeyId, type, title, description)
-      - Content array (can have multiple content items like videos, articles, forms)
-      - Reward information (experience points)
-      - Free preview flag
-      - Creation timestamp
+      **回應包含：**
+      - 任務基本資訊（id、chapterId、journeyId、type、title、description）
+      - 內容陣列（可包含多個內容項目，如影片、文章、表單）
+      - 獎勵資訊（經驗值）
+      - 免費預覽標記
+      - 建立時間戳記
 
-      **Content Structure:**
-      - Each mission can have multiple content items
-      - Content types: video, article, form
-      - Videos include durationSeconds field
+      **內容結構：**
+      - 每個任務可以有多個內容項目
+      - 內容類型：video、article、form
+      - 影片包含 durationSeconds 欄位
 
-      **Free Preview:**
-      - All users can access missions with isFreePreview: true
-      - Other missions require journey purchase (MVP: all accessible)
+      **免費預覽：**
+      - 所有使用者都可以存取 isFreePreview: true 的任務
+      - 其他任務需要購買旅程（MVP：全部可存取）
     operationId: getMissionDetail
     security:
       - bearerAuth: []
@@ -33,27 +33,27 @@ detail:
       - name: journeyId
         in: path
         required: true
-        description: Journey ID
+        description: 旅程 ID
         schema:
           type: integer
           example: 1
       - name: missionId
         in: path
         required: true
-        description: Mission ID
+        description: 任務 ID
         schema:
           type: integer
           example: 1
     responses:
       '200':
-        description: Successfully retrieved mission details
+        description: 成功取得任務詳細資訊
         content:
           application/json:
             schema:
               $ref: '../schemas/missions.yaml#/MissionDetail'
             examples:
               videoMission:
-                summary: Video mission example
+                summary: 影片任務範例
                 value:
                   id: 1
                   chapterId: 8
@@ -72,7 +72,7 @@ detail:
                       url: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
                       durationSeconds: 256
               articleMission:
-                summary: Article mission example
+                summary: 文章任務範例
                 value:
                   id: 5
                   chapterId: 10
@@ -89,7 +89,7 @@ detail:
                       type: 'article'
                       url: 'https://cdn.waterballsa.tw/articles/uml-intro.html'
               questionnaireMission:
-                summary: Questionnaire mission example
+                summary: 問卷任務範例
                 value:
                   id: 7
                   chapterId: 12
@@ -106,24 +106,24 @@ detail:
                       type: 'form'
                       url: 'https://forms.waterballsa.tw/feedback-form-1'
       '401':
-        description: Unauthorized - invalid or missing token
+        description: 未授權 - 無效或遺失的 token
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               unauthorized:
-                summary: Invalid or missing token
+                summary: 無效或遺失的 token
                 value:
-                  error: 'Unauthorized or invalid token'
+                  error: '未授權或無效的 token'
       '404':
-        description: Mission not found
+        description: 找不到任務
         content:
           application/json:
             schema:
               $ref: '../schemas/common.yaml#/ErrorResponse'
             examples:
               notFound:
-                summary: Mission does not exist
+                summary: 任務不存在
                 value:
-                  error: 'Mission not found'
+                  error: '找不到任務'

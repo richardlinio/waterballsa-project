@@ -11,32 +11,32 @@ JourneyListItem:
   properties:
     id:
       type: integer
-      description: Journey ID
+      description: 旅程 ID
       example: 1
     slug:
       type: string
-      description: URL-friendly identifier for the journey
+      description: 旅程的 URL 友善識別碼
       example: 'software-design-pattern'
     title:
       type: string
-      description: Journey title
+      description: 旅程標題
       example: '軟體設計模式精通之旅'
     description:
       type: string
-      description: Journey description
+      description: 旅程描述
       example: '用 C.A. 模式大大提昇系統思維能力'
     coverImageUrl:
       type: string
       format: uri
-      description: Cover image URL
+      description: 封面圖片 URL
       example: 'https://example.com/cover1.jpg'
     teacherName:
       type: string
-      description: Teacher name
+      description: 教師名稱
       example: '水球潘'
     price:
       type: integer
-      description: Journey price in TWD (New Taiwan Dollar)
+      description: 旅程價格，單位為新台幣（TWD）
       example: 3990
 
 JourneyDetail:
@@ -53,36 +53,36 @@ JourneyDetail:
   properties:
     id:
       type: integer
-      description: Journey ID
+      description: 旅程 ID
       example: 1
     slug:
       type: string
-      description: URL-friendly identifier for the journey
+      description: 旅程的 URL 友善識別碼
       example: 'software-design-pattern'
     title:
       type: string
-      description: Journey title
+      description: 旅程標題
       example: '軟體設計模式精通之旅'
     description:
       type: string
-      description: Journey description
+      description: 旅程描述
       example: '用 C.A. 模式大大提昇系統思維能力'
     coverImageUrl:
       type: string
       format: uri
-      description: Cover image URL
+      description: 封面圖片 URL
       example: 'https://example.com/cover1.jpg'
     teacherName:
       type: string
-      description: Teacher name
+      description: 教師名稱
       example: '水球潘'
     price:
       type: integer
-      description: Journey price in TWD (New Taiwan Dollar)
+      description: 旅程價格，單位為新台幣（TWD）
       example: 3990
     chapters:
       type: array
-      description: List of chapters in this journey
+      description: 此旅程中的章節列表
       items:
         $ref: '#/Chapter'
     userStatus:
@@ -98,19 +98,19 @@ Chapter:
   properties:
     id:
       type: integer
-      description: Chapter ID
+      description: 章節 ID
       example: 1
     title:
       type: string
-      description: Chapter title
+      description: 章節標題
       example: '課程介紹'
     orderIndex:
       type: integer
-      description: Chapter order index
+      description: 章節排序索引
       example: 1
     missions:
       type: array
-      description: List of missions in this chapter
+      description: 此章節中的任務列表
       items:
         $ref: '#/MissionSummary'
 
@@ -125,7 +125,7 @@ MissionSummary:
   properties:
     id:
       type: integer
-      description: Mission ID
+      description: 任務 ID
       example: 1
     type:
       type: string
@@ -133,11 +133,11 @@ MissionSummary:
         - VIDEO
         - ARTICLE
         - QUESTIONNAIRE
-      description: Mission type (video, article, or questionnaire)
+      description: 任務類型（影片、文章或問卷）
       example: 'VIDEO'
     title:
       type: string
-      description: Mission title
+      description: 任務標題
       example: '這門課手把手帶你成為架構設計的高手'
     accessLevel:
       type: string
@@ -146,14 +146,14 @@ MissionSummary:
         - AUTHENTICATED
         - PURCHASED
       description: |
-        Mission access level:
-        - PUBLIC: Can be viewed without authentication
-        - AUTHENTICATED: Requires login to view
-        - PURCHASED: Requires journey purchase to view
+        任務存取層級：
+        - PUBLIC: 無需驗證即可檢視
+        - AUTHENTICATED: 需要登入才能檢視
+        - PURCHASED: 需要購買旅程才能檢視
       example: 'PUBLIC'
     orderIndex:
       type: integer
-      description: Mission order index within the chapter
+      description: 任務在章節內的排序索引
       example: 1
     status:
       type: string
@@ -162,13 +162,13 @@ MissionSummary:
         - COMPLETED
         - DELIVERED
       description: |
-        Mission completion status for the authenticated user.
-        - UNCOMPLETED: Mission in progress or not started
-        - COMPLETED: Mission completed but not delivered yet
-        - DELIVERED: Mission delivered and rewards received
+        已驗證使用者的任務完成狀態。
+        - UNCOMPLETED: 任務進行中或尚未開始
+        - COMPLETED: 任務已完成但尚未交付
+        - DELIVERED: 任務已交付並已領取獎勵
 
-        Note: This field is only included when the request is authenticated.
-        For unauthenticated requests, this field will be null or omitted.
+        注意：此欄位僅在請求已驗證時包含。
+        對於未驗證的請求，此欄位將為 null 或省略。
       example: 'UNCOMPLETED'
       nullable: true
 
@@ -181,25 +181,25 @@ UserStatus:
     hasPurchased:
       type: boolean
       description: |
-        Whether the user has purchased this journey.
-        - true: User owns this journey (has PAID order)
-        - false: User does not own this journey
+        使用者是否已購買此旅程。
+        - true: 使用者擁有此旅程（有已付款訂單）
+        - false: 使用者尚未擁有此旅程
       example: true
     hasUnpaidOrder:
       type: boolean
       description: |
-        Whether the user has an unpaid order for this journey.
-        - true: User has created an order but not yet paid
-        - false: User has no unpaid order
+        使用者是否有此旅程的未付款訂單。
+        - true: 使用者已建立訂單但尚未付款
+        - false: 使用者沒有未付款訂單
       example: false
     unpaidOrderId:
       type: integer
       description: |
-        The ID of the unpaid order for this journey (if hasUnpaidOrder is true).
-        Frontend can use this to redirect user to the payment page.
+        此旅程的未付款訂單 ID（如果 hasUnpaidOrder 為 true）。
+        前端可使用此 ID 將使用者導向付款頁面。
       example: 123
       nullable: true
   nullable: true
   description: |
-    User's purchase status for this journey. Only included when user is authenticated.
-    For unauthenticated requests, this field will be null.
+    使用者對此旅程的購買狀態。僅在使用者已驗證時包含。
+    對於未驗證的請求，此欄位將為 null。

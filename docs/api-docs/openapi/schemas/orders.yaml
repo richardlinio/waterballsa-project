@@ -5,7 +5,7 @@ CreateOrderRequest:
   properties:
     items:
       type: array
-      description: List of items to purchase
+      description: 要購買的項目列表
       minItems: 1
       items:
         type: object
@@ -15,11 +15,11 @@ CreateOrderRequest:
         properties:
           journeyId:
             type: integer
-            description: ID of the journey to purchase
+            description: 要購買的旅程 ID
             example: 17
           quantity:
             type: integer
-            description: Quantity to purchase
+            description: 購買數量
             minimum: 1
             default: 1
             example: 1
@@ -40,21 +40,21 @@ OrderResponse:
   properties:
     id:
       type: integer
-      description: Order ID
+      description: 訂單 ID
       example: 123
     orderNumber:
       type: string
       description: |
-        Unique order number with format: {timestamp}{userId}{randomCode}
-        Example: 20251121011117cd5 = 2025112101 (timestamp) + 11 (userId) + 17cd5 (random)
+        唯一訂單編號，格式：{timestamp}{userId}{randomCode}
+        範例：20251121011117cd5 = 2025112101（時間戳記）+ 11（使用者 ID）+ 17cd5（隨機碼）
       example: '20251121011117cd5'
     userId:
       type: integer
-      description: User ID who created this order
+      description: 建立此訂單的使用者 ID
       example: 11
     username:
       type: string
-      description: Username of the order owner
+      description: 訂單擁有者的使用者名稱
       example: 'john_doe'
     status:
       type: string
@@ -63,46 +63,46 @@ OrderResponse:
         - PAID
         - EXPIRED
       description: |
-        Order status:
-        - UNPAID: Order created but not yet paid
-        - PAID: Payment completed, user has journey access
-        - EXPIRED: Order expired after 3 days without payment, cannot be paid
+        訂單狀態：
+        - UNPAID: 訂單已建立但尚未付款
+        - PAID: 付款完成，使用者擁有旅程存取權
+        - EXPIRED: 訂單在 3 天後過期，無法付款
       example: 'UNPAID'
     originalPrice:
       type: number
       format: decimal
-      description: Total original price (sum of all item original prices)
+      description: 總原價（所有項目原價的總和）
       example: 7599.00
     discount:
       type: number
       format: decimal
-      description: Total discount amount
+      description: 總折扣金額
       example: 0.00
     price:
       type: number
       format: decimal
-      description: Final amount to pay (originalPrice - discount)
+      description: 最終應付金額（originalPrice - discount）
       example: 7599.00
     items:
       type: array
-      description: List of order items (journeys to purchase)
+      description: 訂單項目列表（要購買的旅程）
       items:
         $ref: '#/OrderItem'
     createdAt:
       type: integer
       format: int64
-      description: Order creation timestamp (milliseconds since epoch)
+      description: 訂單建立時間戳記（自紀元以來的毫秒數）
       example: 1732420800000
     expiredAt:
       type: integer
       format: int64
-      description: Order expiration timestamp (created_at + 3 days, null if already paid)
+      description: 訂單過期時間戳記（created_at + 3 天，若已付款則為 null）
       example: 1732680000000
       nullable: true
     paidAt:
       type: integer
       format: int64
-      description: Payment completion timestamp (null if not paid yet)
+      description: 付款完成時間戳記（若尚未付款則為 null）
       example: 1732507200000
       nullable: true
 
@@ -118,30 +118,30 @@ OrderItem:
   properties:
     journeyId:
       type: integer
-      description: Journey ID
+      description: 旅程 ID
       example: 17
     journeyTitle:
       type: string
-      description: Journey title (snapshot at order creation time)
+      description: 旅程標題（訂單建立時的快照）
       example: 'AI x BDD：規格驅動全自動開發術'
     quantity:
       type: integer
-      description: Quantity of this journey (always 1 in MVP)
+      description: 此旅程的數量（MVP 中永遠為 1）
       example: 1
     originalPrice:
       type: number
       format: decimal
-      description: Journey price at order creation time (locked price)
+      description: 訂單建立時的旅程價格（鎖定價格）
       example: 7599.00
     discount:
       type: number
       format: decimal
-      description: Discount applied to this item
+      description: 套用至此項目的折扣
       example: 0.00
     price:
       type: number
       format: decimal
-      description: Final price for this item (originalPrice - discount)
+      description: 此項目的最終價格（originalPrice - discount）
       example: 7599.00
 
 PayOrderResponse:
@@ -156,31 +156,31 @@ PayOrderResponse:
   properties:
     id:
       type: integer
-      description: Order ID
+      description: 訂單 ID
       example: 123
     orderNumber:
       type: string
-      description: Order number
+      description: 訂單編號
       example: '20251121011117cd5'
     status:
       type: string
       enum:
         - PAID
-      description: Order status (always PAID after successful payment)
+      description: 訂單狀態（成功付款後永遠為 PAID）
       example: 'PAID'
     price:
       type: number
       format: decimal
-      description: Amount paid
+      description: 已付金額
       example: 7599.00
     paidAt:
       type: integer
       format: int64
-      description: Payment completion timestamp (milliseconds since epoch)
+      description: 付款完成時間戳記（自紀元以來的毫秒數）
       example: 1732507200000
     message:
       type: string
-      description: Success message
+      description: 成功訊息
       example: '付款完成'
 
 OrderListResponse:
@@ -191,7 +191,7 @@ OrderListResponse:
   properties:
     orders:
       type: array
-      description: List of order summaries
+      description: 訂單摘要列表
       items:
         $ref: '#/OrderSummary'
     pagination:
@@ -209,11 +209,11 @@ OrderSummary:
   properties:
     id:
       type: integer
-      description: Order ID
+      description: 訂單 ID
       example: 123
     orderNumber:
       type: string
-      description: Order number
+      description: 訂單編號
       example: '20251121011117cd5'
     status:
       type: string
@@ -221,33 +221,33 @@ OrderSummary:
         - UNPAID
         - PAID
         - EXPIRED
-      description: Order status
+      description: 訂單狀態
       example: 'UNPAID'
     price:
       type: number
       format: decimal
-      description: Final amount to pay
+      description: 最終應付金額
       example: 7599.00
     items:
       type: array
-      description: Simplified order items (for list display)
+      description: 簡化的訂單項目（用於列表顯示）
       items:
         $ref: '#/OrderItemSummary'
     createdAt:
       type: integer
       format: int64
-      description: Order creation timestamp
+      description: 訂單建立時間戳記
       example: 1732420800000
     expiredAt:
       type: integer
       format: int64
-      description: Order expiration timestamp (created_at + 3 days, null if already paid)
+      description: 訂單過期時間戳記（created_at + 3 天，若已付款則為 null）
       example: 1732680000000
       nullable: true
     paidAt:
       type: integer
       format: int64
-      description: Payment completion timestamp (null if unpaid)
+      description: 付款完成時間戳記（若未付款則為 null）
       example: 1732507200000
       nullable: true
 
@@ -259,11 +259,11 @@ OrderItemSummary:
   properties:
     journeyId:
       type: integer
-      description: Journey ID
+      description: 旅程 ID
       example: 17
     journeyTitle:
       type: string
-      description: Journey title
+      description: 旅程標題
       example: 'AI x BDD：規格驅動全自動開發術'
 
 Pagination:
@@ -275,13 +275,13 @@ Pagination:
   properties:
     page:
       type: integer
-      description: Current page number (starts from 1)
+      description: 目前頁碼（從 1 開始）
       example: 1
     limit:
       type: integer
-      description: Number of items per page
+      description: 每頁項目數量
       example: 20
     total:
       type: integer
-      description: Total number of items
+      description: 項目總數
       example: 5
