@@ -39,12 +39,14 @@ list:
                       description: '用 C.A. 模式大大提昇系統思維能力'
                       coverImageUrl: 'https://example.com/cover1.jpg'
                       teacherName: '水球潘'
+                      price: 3990
                     - id: 2
                       slug: 'web-development-intro'
                       title: 'Web 開發入門'
                       description: '從零開始學習網頁開發'
                       coverImageUrl: 'https://example.com/cover2.jpg'
                       teacherName: '林老師'
+                      price: 2990
 
 detail:
   get:
@@ -102,10 +104,7 @@ detail:
                   description: '用 C.A. 模式大大提昇系統思維能力'
                   coverImageUrl: 'https://example.com/cover1.jpg'
                   teacherName: '水球潘'
-                  userStatus:
-                    hasPurchased: true
-                    hasUnpaidOrder: false
-                    unpaidOrderId: null
+                  price: 3990
                   chapters:
                     - id: 1
                       title: '課程介紹'
@@ -133,74 +132,6 @@ detail:
                           accessLevel: 'PURCHASED'
                           orderIndex: 1
                           status: 'UNCOMPLETED'
-              authenticatedWithUnpaidOrder:
-                summary: 使用者有此旅程的未付款訂單
-                value:
-                  id: 1
-                  slug: 'design-patterns-mastery'
-                  title: '軟體設計模式精通之旅'
-                  description: '用 C.A. 模式大大提昇系統思維能力'
-                  coverImageUrl: 'https://example.com/cover1.jpg'
-                  teacherName: '水球潘'
-                  userStatus:
-                    hasPurchased: false
-                    hasUnpaidOrder: true
-                    unpaidOrderId: 123
-                  chapters:
-                    - id: 1
-                      title: '課程介紹'
-                      orderIndex: 1
-                      missions:
-                        - id: 1
-                          type: 'VIDEO'
-                          title: '這門課手把手帶你成為架構設計的高手'
-                          accessLevel: 'PUBLIC'
-                          orderIndex: 1
-                          status: 'UNCOMPLETED'
-                    - id: 2
-                      title: '架構思維的 C.A. 模式'
-                      orderIndex: 2
-                      missions:
-                        - id: 3
-                          type: 'VIDEO'
-                          title: '架構師該如何思考'
-                          accessLevel: 'PURCHASED'
-                          orderIndex: 1
-                          status: 'UNCOMPLETED'
-              authenticatedNotPurchased:
-                summary: 使用者已登入但尚未購買此旅程
-                value:
-                  id: 1
-                  slug: 'design-patterns-mastery'
-                  title: '軟體設計模式精通之旅'
-                  description: '用 C.A. 模式大大提昇系統思維能力'
-                  coverImageUrl: 'https://example.com/cover1.jpg'
-                  teacherName: '水球潘'
-                  userStatus:
-                    hasPurchased: false
-                    hasUnpaidOrder: false
-                    unpaidOrderId: null
-                  chapters:
-                    - id: 1
-                      title: '課程介紹'
-                      orderIndex: 1
-                      missions:
-                        - id: 1
-                          type: 'VIDEO'
-                          title: '這門課手把手帶你成為架構設計的高手'
-                          accessLevel: 'PUBLIC'
-                          orderIndex: 1
-                          status: 'UNCOMPLETED'
-                    - id: 2
-                      title: '架構思維的 C.A. 模式'
-                      orderIndex: 2
-                      missions:
-                        - id: 3
-                          type: 'VIDEO'
-                          title: '架構師該如何思考'
-                          accessLevel: 'PURCHASED'
-                          orderIndex: 1
-                          status: 'UNCOMPLETED'
               unauthenticated:
                 summary: 包含章節和任務的旅程（未驗證）
                 value:
@@ -210,7 +141,7 @@ detail:
                   description: '用 C.A. 模式大大提昇系統思維能力'
                   coverImageUrl: 'https://example.com/cover1.jpg'
                   teacherName: '水球潘'
-                  userStatus: null
+                  price: 3990
                   chapters:
                     - id: 1
                       title: '課程介紹'

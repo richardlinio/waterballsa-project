@@ -7,7 +7,7 @@ MissionDetail:
     - type
     - title
     - description
-    - isFreePreview
+    - accessLevel
     - createdAt
     - reward
     - resource
@@ -40,10 +40,18 @@ MissionDetail:
       type: string
       description: 任務的詳細描述
       example: '思維升級：Christopher Alexander 模式六大要素及模式語言'
-    isFreePreview:
-      type: boolean
-      description: 此任務是否可免費預覽
-      example: true
+    accessLevel:
+      type: string
+      enum:
+        - PUBLIC
+        - AUTHENTICATED
+        - PURCHASED
+      description: |
+        任務存取層級：
+        - PUBLIC: 無需驗證即可檢視
+        - AUTHENTICATED: 需要登入才能檢視
+        - PURCHASED: 需要購買旅程才能檢視
+      example: 'PUBLIC'
     createdAt:
       type: integer
       format: int64
@@ -114,30 +122,6 @@ UpdateProgressRequest:
       example: 150
       minimum: 0
 
-ProgressUpdateResponse:
-  type: object
-  required:
-    - missionId
-    - status
-    - watchPositionSeconds
-  properties:
-    missionId:
-      type: integer
-      description: 任務 ID
-      example: 1
-    watchPositionSeconds:
-      type: integer
-      description: 更新後的觀看位置（用於 VIDEO 任務）
-      example: 150
-    status:
-      type: string
-      enum:
-        - UNCOMPLETED
-        - COMPLETED
-        - DELIVERED
-      description: 更新後的任務狀態
-      example: UNCOMPLETED
-
 DeliverResponse:
   type: object
   required:
@@ -163,7 +147,7 @@ DeliverResponse:
       description: 交付後使用者的目前等級
       example: 4
 
-UserMissionProgress:
+UserMissionProgressResponse:
   type: object
   required:
     - missionId

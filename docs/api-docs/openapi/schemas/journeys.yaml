@@ -35,9 +35,10 @@ JourneyListItem:
       description: 教師名稱
       example: '水球潘'
     price:
-      type: integer
+      type: number
+      format: decimal
       description: 旅程價格，單位為新台幣（TWD）
-      example: 3990
+      example: 3990.00
 
 JourneyDetail:
   type: object
@@ -77,16 +78,15 @@ JourneyDetail:
       description: 教師名稱
       example: '水球潘'
     price:
-      type: integer
+      type: number
+      format: decimal
       description: 旅程價格，單位為新台幣（TWD）
-      example: 3990
+      example: 3990.00
     chapters:
       type: array
       description: 此旅程中的章節列表
       items:
         $ref: '#/Chapter'
-    userStatus:
-      $ref: '#/UserStatus'
 
 Chapter:
   type: object
@@ -171,35 +171,3 @@ MissionSummary:
         對於未驗證的請求，此欄位將為 null 或省略。
       example: 'UNCOMPLETED'
       nullable: true
-
-UserStatus:
-  type: object
-  required:
-    - hasPurchased
-    - hasUnpaidOrder
-  properties:
-    hasPurchased:
-      type: boolean
-      description: |
-        使用者是否已購買此旅程。
-        - true: 使用者擁有此旅程（有已付款訂單）
-        - false: 使用者尚未擁有此旅程
-      example: true
-    hasUnpaidOrder:
-      type: boolean
-      description: |
-        使用者是否有此旅程的未付款訂單。
-        - true: 使用者已建立訂單但尚未付款
-        - false: 使用者沒有未付款訂單
-      example: false
-    unpaidOrderId:
-      type: integer
-      description: |
-        此旅程的未付款訂單 ID（如果 hasUnpaidOrder 為 true）。
-        前端可使用此 ID 將使用者導向付款頁面。
-      example: 123
-      nullable: true
-  nullable: true
-  description: |
-    使用者對此旅程的購買狀態。僅在使用者已驗證時包含。
-    對於未驗證的請求，此欄位將為 null。

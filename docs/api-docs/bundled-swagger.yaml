@@ -277,12 +277,14 @@ paths:
                         description: 用 C.A. 模式大大提昇系統思維能力
                         coverImageUrl: 'https://example.com/cover1.jpg'
                         teacherName: 水球潘
+                        price: 3990
                       - id: 2
                         slug: web-development-intro
                         title: Web 開發入門
                         description: 從零開始學習網頁開發
                         coverImageUrl: 'https://example.com/cover2.jpg'
                         teacherName: 林老師
+                        price: 2990
   '/journeys/{journeyId}':
     get:
       tags:
@@ -339,10 +341,7 @@ paths:
                     description: 用 C.A. 模式大大提昇系統思維能力
                     coverImageUrl: 'https://example.com/cover1.jpg'
                     teacherName: 水球潘
-                    userStatus:
-                      hasPurchased: true
-                      hasUnpaidOrder: false
-                      unpaidOrderId: null
+                    price: 3990
                     chapters:
                       - id: 1
                         title: 課程介紹
@@ -370,74 +369,6 @@ paths:
                             accessLevel: PURCHASED
                             orderIndex: 1
                             status: UNCOMPLETED
-                authenticatedWithUnpaidOrder:
-                  summary: 使用者有此旅程的未付款訂單
-                  value:
-                    id: 1
-                    slug: design-patterns-mastery
-                    title: 軟體設計模式精通之旅
-                    description: 用 C.A. 模式大大提昇系統思維能力
-                    coverImageUrl: 'https://example.com/cover1.jpg'
-                    teacherName: 水球潘
-                    userStatus:
-                      hasPurchased: false
-                      hasUnpaidOrder: true
-                      unpaidOrderId: 123
-                    chapters:
-                      - id: 1
-                        title: 課程介紹
-                        orderIndex: 1
-                        missions:
-                          - id: 1
-                            type: VIDEO
-                            title: 這門課手把手帶你成為架構設計的高手
-                            accessLevel: PUBLIC
-                            orderIndex: 1
-                            status: UNCOMPLETED
-                      - id: 2
-                        title: 架構思維的 C.A. 模式
-                        orderIndex: 2
-                        missions:
-                          - id: 3
-                            type: VIDEO
-                            title: 架構師該如何思考
-                            accessLevel: PURCHASED
-                            orderIndex: 1
-                            status: UNCOMPLETED
-                authenticatedNotPurchased:
-                  summary: 使用者已登入但尚未購買此旅程
-                  value:
-                    id: 1
-                    slug: design-patterns-mastery
-                    title: 軟體設計模式精通之旅
-                    description: 用 C.A. 模式大大提昇系統思維能力
-                    coverImageUrl: 'https://example.com/cover1.jpg'
-                    teacherName: 水球潘
-                    userStatus:
-                      hasPurchased: false
-                      hasUnpaidOrder: false
-                      unpaidOrderId: null
-                    chapters:
-                      - id: 1
-                        title: 課程介紹
-                        orderIndex: 1
-                        missions:
-                          - id: 1
-                            type: VIDEO
-                            title: 這門課手把手帶你成為架構設計的高手
-                            accessLevel: PUBLIC
-                            orderIndex: 1
-                            status: UNCOMPLETED
-                      - id: 2
-                        title: 架構思維的 C.A. 模式
-                        orderIndex: 2
-                        missions:
-                          - id: 3
-                            type: VIDEO
-                            title: 架構師該如何思考
-                            accessLevel: PURCHASED
-                            orderIndex: 1
-                            status: UNCOMPLETED
                 unauthenticated:
                   summary: 包含章節和任務的旅程（未驗證）
                   value:
@@ -447,7 +378,7 @@ paths:
                     description: 用 C.A. 模式大大提昇系統思維能力
                     coverImageUrl: 'https://example.com/cover1.jpg'
                     teacherName: 水球潘
-                    userStatus: null
+                    price: 3990
                     chapters:
                       - id: 1
                         title: 課程介紹
@@ -501,19 +432,20 @@ paths:
 
         **回應包含：**
         - 任務基本資訊（id、chapterId、journeyId、type、title、description）
-        - 內容陣列（可包含多個內容項目，如影片、文章、表單）
+        - 資源陣列（可包含多個資源項目，如影片、文章、表單）
         - 獎勵資訊（經驗值）
-        - 免費預覽標記
+        - 存取層級
         - 建立時間戳記
 
-        **內容結構：**
-        - 每個任務可以有多個內容項目
-        - 內容類型：video、article、form
+        **資源結構：**
+        - 每個任務可以有多個資源項目
+        - 資源類型：video、article、form
         - 影片包含 durationSeconds 欄位
 
-        **免費預覽：**
-        - 所有使用者都可以存取 isFreePreview: true 的任務
-        - 其他任務需要購買旅程（MVP：全部可存取）
+        **存取層級：**
+        - PUBLIC: 所有使用者都可以存取
+        - AUTHENTICATED: 需要登入才能存取
+        - PURCHASED: 需要購買旅程才能存取
       operationId: getMissionDetail
       security:
         - bearerAuth: []
@@ -549,15 +481,15 @@ paths:
                     type: VIDEO
                     title: 課程介紹：這門課手把手帶你成為架構設計的高手
                     description: 思維升級：Christopher Alexander 模式六大要素及模式語言
-                    isFreePreview: true
+                    accessLevel: PUBLIC
                     createdAt: 1733294001561
                     videoLength: '04:16'
                     reward:
                       exp: 100
-                    content:
+                    resource:
                       - id: 0
                         type: video
-                        url: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
+                        resourceUrl: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
                         durationSeconds: 256
                 articleMission:
                   summary: 文章任務範例
@@ -568,14 +500,14 @@ paths:
                     type: ARTICLE
                     title: UML 不是英文縮寫字
                     description: UML 統一塑模語言完整介紹
-                    isFreePreview: false
+                    accessLevel: PURCHASED
                     createdAt: 1733294001561
                     reward:
                       exp: 100
-                    content:
+                    resource:
                       - id: 0
                         type: article
-                        url: 'https://cdn.waterballsa.tw/articles/uml-intro.html'
+                        resourceUrl: 'https://cdn.waterballsa.tw/articles/uml-intro.html'
                 questionnaireMission:
                   summary: 問卷任務範例
                   value:
@@ -585,14 +517,14 @@ paths:
                     type: QUESTIONNAIRE
                     title: 課程回饋問卷
                     description: 請填寫課程回饋問卷，幫助我們改進課程內容
-                    isFreePreview: false
+                    accessLevel: AUTHENTICATED
                     createdAt: 1733294001561
                     reward:
                       exp: 50
-                    content:
+                    resource:
                       - id: 0
                         type: form
-                        url: 'https://forms.waterballsa.tw/feedback-form-1'
+                        resourceUrl: 'https://forms.waterballsa.tw/feedback-form-1'
         '401':
           description: 未授權 - 無效或遺失的 token
           content:
@@ -662,7 +594,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserMissionProgress'
+                $ref: '#/components/schemas/UserMissionProgressResponse'
               examples:
                 videoNotStarted:
                   summary: 影片任務尚未開始
@@ -794,7 +726,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProgressUpdateResponse'
+                $ref: '#/components/schemas/UserMissionProgressResponse'
               examples:
                 videoInProgress:
                   summary: 影片進度已更新（狀態：UNCOMPLETED）
@@ -1780,7 +1712,8 @@ components:
           description: 教師名稱
           example: 水球潘
         price:
-          type: integer
+          type: number
+          format: decimal
           description: 旅程價格，單位為新台幣（TWD）
           example: 3990
     JourneyDetail:
@@ -1821,7 +1754,8 @@ components:
           description: 教師名稱
           example: 水球潘
         price:
-          type: integer
+          type: number
+          format: decimal
           description: 旅程價格，單位為新台幣（TWD）
           example: 3990
         chapters:
@@ -1829,8 +1763,6 @@ components:
           description: 此旅程中的章節列表
           items:
             $ref: '#/components/schemas/Chapter'
-        userStatus:
-          $ref: '#/components/schemas/UserStatus'
     Chapter:
       type: object
       required:
@@ -1922,7 +1854,7 @@ components:
         - type
         - title
         - description
-        - isFreePreview
+        - accessLevel
         - createdAt
         - reward
         - resource
@@ -1955,10 +1887,18 @@ components:
           type: string
           description: 任務的詳細描述
           example: 思維升級：Christopher Alexander 模式六大要素及模式語言
-        isFreePreview:
-          type: boolean
-          description: 此任務是否可免費預覽
-          example: true
+        accessLevel:
+          type: string
+          enum:
+            - PUBLIC
+            - AUTHENTICATED
+            - PURCHASED
+          description: |
+            任務存取層級：
+            - PUBLIC: 無需驗證即可檢視
+            - AUTHENTICATED: 需要登入才能檢視
+            - PURCHASED: 需要購買旅程才能檢視
+          example: PUBLIC
         createdAt:
           type: integer
           format: int64
@@ -2025,29 +1965,6 @@ components:
           description: 目前觀看位置（秒）（用於 VIDEO 任務）
           example: 150
           minimum: 0
-    ProgressUpdateResponse:
-      type: object
-      required:
-        - missionId
-        - status
-        - watchPositionSeconds
-      properties:
-        missionId:
-          type: integer
-          description: 任務 ID
-          example: 1
-        watchPositionSeconds:
-          type: integer
-          description: 更新後的觀看位置（用於 VIDEO 任務）
-          example: 150
-        status:
-          type: string
-          enum:
-            - UNCOMPLETED
-            - COMPLETED
-            - DELIVERED
-          description: 更新後的任務狀態
-          example: UNCOMPLETED
     DeliverResponse:
       type: object
       required:
@@ -2072,7 +1989,7 @@ components:
           type: integer
           description: 交付後使用者的目前等級
           example: 4
-    UserMissionProgress:
+    UserMissionProgressResponse:
       type: object
       required:
         - missionId
@@ -2462,34 +2379,3 @@ components:
           type: string
           description: 授予此旅程存取權的訂單編號
           example: 20251121011117cd5
-    UserStatus:
-      type: object
-      required:
-        - hasPurchased
-        - hasUnpaidOrder
-      properties:
-        hasPurchased:
-          type: boolean
-          description: |
-            使用者是否已購買此旅程。
-            - true: 使用者擁有此旅程（有已付款訂單）
-            - false: 使用者尚未擁有此旅程
-          example: true
-        hasUnpaidOrder:
-          type: boolean
-          description: |
-            使用者是否有此旅程的未付款訂單。
-            - true: 使用者已建立訂單但尚未付款
-            - false: 使用者沒有未付款訂單
-          example: false
-        unpaidOrderId:
-          type: integer
-          description: |
-            此旅程的未付款訂單 ID（如果 hasUnpaidOrder 為 true）。
-            前端可使用此 ID 將使用者導向付款頁面。
-          example: 123
-          nullable: true
-      nullable: true
-      description: |
-        使用者對此旅程的購買狀態。僅在使用者已驗證時包含。
-        對於未驗證的請求，此欄位將為 null。
