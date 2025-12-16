@@ -45,7 +45,7 @@ detail:
         content:
           application/json:
             schema:
-              $ref: '../schemas/missions.yaml#/UserMissionProgress'
+              $ref: '../schemas/missions.yaml#/UserMissionProgressResponse'
             examples:
               videoNotStarted:
                 summary: 影片任務尚未開始
@@ -178,7 +178,7 @@ detail:
         content:
           application/json:
             schema:
-              $ref: '../schemas/missions.yaml#/ProgressUpdateResponse'
+              $ref: '../schemas/missions.yaml#/UserMissionProgressResponse'
             examples:
               videoInProgress:
                 summary: 影片進度已更新（狀態：UNCOMPLETED）

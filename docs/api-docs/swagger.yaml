@@ -143,12 +143,10 @@ components:
       $ref: './openapi/schemas/missions.yaml#/MissionResource'
     UpdateProgressRequest:
       $ref: './openapi/schemas/missions.yaml#/UpdateProgressRequest'
-    ProgressUpdateResponse:
-      $ref: './openapi/schemas/missions.yaml#/ProgressUpdateResponse'
     DeliverResponse:
       $ref: './openapi/schemas/missions.yaml#/DeliverResponse'
-    UserMissionProgress:
-      $ref: './openapi/schemas/missions.yaml#/UserMissionProgress'
+    UserMissionProgressResponse:
+      $ref: './openapi/schemas/missions.yaml#/UserMissionProgressResponse'
 
     # User schemas
     UserProfile:
@@ -177,7 +175,3 @@ components:
       $ref: './openapi/schemas/users.yaml#/UserJourneyListResponse'
     UserJourneyItem:
       $ref: './openapi/schemas/users.yaml#/UserJourneyItem'
-
-    # Journey purchase status schema
-    UserStatus:
-      $ref: './openapi/schemas/journeys.yaml#/UserStatus'

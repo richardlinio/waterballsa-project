@@ -13,19 +13,20 @@ detail:
 
       **回應包含：**
       - 任務基本資訊（id、chapterId、journeyId、type、title、description）
-      - 內容陣列（可包含多個內容項目，如影片、文章、表單）
+      - 資源陣列（可包含多個資源項目，如影片、文章、表單）
       - 獎勵資訊（經驗值）
-      - 免費預覽標記
+      - 存取層級
       - 建立時間戳記
 
-      **內容結構：**
-      - 每個任務可以有多個內容項目
-      - 內容類型：video、article、form
+      **資源結構：**
+      - 每個任務可以有多個資源項目
+      - 資源類型：video、article、form
       - 影片包含 durationSeconds 欄位
 
-      **免費預覽：**
-      - 所有使用者都可以存取 isFreePreview: true 的任務
-      - 其他任務需要購買旅程（MVP：全部可存取）
+      **存取層級：**
+      - PUBLIC: 所有使用者都可以存取
+      - AUTHENTICATED: 需要登入才能存取
+      - PURCHASED: 需要購買旅程才能存取
     operationId: getMissionDetail
     security:
       - bearerAuth: []
@@ -61,15 +62,15 @@ detail:
                   type: 'VIDEO'
                   title: '課程介紹：這門課手把手帶你成為架構設計的高手'
                   description: '思維升級：Christopher Alexander 模式六大要素及模式語言'
-                  isFreePreview: true
+                  accessLevel: 'PUBLIC'
                   createdAt: 1733294001561
                   videoLength: '04:16'
                   reward:
                     exp: 100
-                  content:
+                  resource:
                     - id: 0
                       type: 'video'
-                      url: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
+                      resourceUrl: 'https://cdn.waterballsa.tw/software-design-pattern/videos/c8m1-0/c8m1-0.m3u8'
                       durationSeconds: 256
               articleMission:
                 summary: 文章任務範例
@@ -80,14 +81,14 @@ detail:
                   type: 'ARTICLE'
                   title: 'UML 不是英文縮寫字'
                   description: 'UML 統一塑模語言完整介紹'
-                  isFreePreview: false
+                  accessLevel: 'PURCHASED'
                   createdAt: 1733294001561
                   reward:
                     exp: 100
-                  content:
+                  resource:
                     - id: 0
                       type: 'article'
-                      url: 'https://cdn.waterballsa.tw/articles/uml-intro.html'
+                      resourceUrl: 'https://cdn.waterballsa.tw/articles/uml-intro.html'
               questionnaireMission:
                 summary: 問卷任務範例
                 value:
@@ -97,14 +98,14 @@ detail:
                   type: 'QUESTIONNAIRE'
                   title: '課程回饋問卷'
                   description: '請填寫課程回饋問卷，幫助我們改進課程內容'
-                  isFreePreview: false
+                  accessLevel: 'AUTHENTICATED'
                   createdAt: 1733294001561
                   reward:
                     exp: 50
-                  content:
+                  resource:
                     - id: 0
                       type: 'form'
-                      url: 'https://forms.waterballsa.tw/feedback-form-1'
+                      resourceUrl: 'https://forms.waterballsa.tw/feedback-form-1'
       '401':
         description: 未授權 - 無效或遺失的 token
         content:
