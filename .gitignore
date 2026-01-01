@@ -4,6 +4,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
+.env.golang
 
 # Database data
 db/postgres_data/
@@ -21,3 +22,6 @@ db/postgres_data/
 # OS
 .DS_Store
 Thumbs.db
+
+# Go
+vendor/
