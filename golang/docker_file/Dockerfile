@@ -1,7 +1,7 @@
 FROM golang:1.25-alpine
 WORKDIR /app
 
-RUN apk add --no-cache curl git bash && \
+RUN apk add --no-cache curl git bash build-base && \
     go install github.com/air-verse/air@v1.63.4 && \
     go install mvdan.cc/gofumpt@v0.9.2 && \
     go install github.com/pressly/goose/v3/cmd/goose@v3.26.0 && \
