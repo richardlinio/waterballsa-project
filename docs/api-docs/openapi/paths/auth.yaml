@@ -168,3 +168,59 @@ logout:
                 summary: 權杖無效或遺失
                 value:
                   error: '未授權或權杖無效'
+
+refresh:
+  post:
+    tags:
+      - Auth
+    summary: 刷新存取權杖
+    description: |
+      使用 Refresh Token 取得新的 Access Token。
+
+      **注意：** Refresh Token 會透過 Cookie 自動傳送。
+    operationId: refresh
+    responses:
+      '200':
+        description: 權杖刷新成功
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/RefreshResponse'
+            examples:
+              success:
+                summary: 刷新成功
+                value:
+                  accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+                  user:
+                    id: 1
+                    username: 'john_doe123'
+                    experience: 0
+      '401':
+        description: 未授權 - Refresh Token 無效、過期或遺失
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              unauthorized:
+                summary: Refresh Token 無效、過期或遺失
+                value:
+                  code: 'ERR_UNAUTHORIZED'
+                  error: '未授權或權杖無效'
+      '500':
+        description: 伺服器內部錯誤
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/ErrorResponse'
+            examples:
+              databaseError:
+                summary: 資料庫操作失敗
+                value:
+                  code: 'ERR_DATABASE_ERROR'
+                  error: '資料庫操作失敗'
+              internalError:
+                summary: 伺服器內部錯誤
+                value:
+                  code: 'ERR_INTERNAL_SERVER_ERROR'
+                  error: '伺服器內部錯誤'
