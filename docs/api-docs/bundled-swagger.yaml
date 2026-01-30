@@ -202,17 +202,17 @@ paths:
         - Auth
       summary: 使用者登出
       description: |
-        登出目前使用者並使存取權杖失效。
+        登出目前使用者並清除認證 Cookie。
 
-        **權杖失效化：**
-        - 存取權杖會被加入黑名單（儲存在資料庫中）
+        **不需要認證：** 此端點不要求有效的存取權杖，無論是否已登入皆可呼叫。
+
+        **權杖失效化（盡力而為）：**
+        - 若提供有效的存取權杖，會將其加入黑名單（儲存在資料庫中）
+        - 若提供有效的重新整理權杖，會將其撤銷
         - 黑名單項目會在權杖過期時自動過期
-        - 登出後，權杖無法用於存取受保護的端點
-
-        **注意：** 需要在 Authorization 標頭中提供有效的存取權杖
+        - 若權杖無效或未提供，仍會清除 Cookie 並回傳成功
       operationId: logout
-      security:
-        - bearerAuth: []
+      security: []
       responses:
         '200':
           description: 登出成功
@@ -225,17 +225,61 @@ paths:
                   summary: 登出成功
                   value:
                     message: 登出成功
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: 刷新存取權杖
+      description: |
+        使用 Refresh Token 取得新的 Access Token。
+
+        **注意：** Refresh Token 會透過 Cookie 自動傳送。
+      operationId: refresh
+      responses:
+        '200':
+          description: 權杖刷新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+              examples:
+                success:
+                  summary: 刷新成功
+                  value:
+                    accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    user:
+                      id: 1
+                      username: john_doe123
+                      experience: 0
         '401':
-          description: 未授權 - 權杖無效或遺失
+          description: 未授權 - Refresh Token 無效、過期或遺失
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 unauthorized:
-                  summary: 權杖無效或遺失
+                  summary: Refresh Token 無效、過期或遺失
                   value:
+                    code: ERR_UNAUTHORIZED
                     error: 未授權或權杖無效
+        '500':
+          description: 伺服器內部錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseError:
+                  summary: 資料庫操作失敗
+                  value:
+                    code: ERR_DATABASE_ERROR
+                    error: 資料庫操作失敗
+                internalError:
+                  summary: 伺服器內部錯誤
+                  value:
+                    code: ERR_INTERNAL_SERVER_ERROR
+                    error: 伺服器內部錯誤
   /journeys:
     get:
       tags:
@@ -1675,6 +1719,18 @@ components:
           type: string
           description: 成功訊息
           example: Logout successful
+    RefreshResponse:
+      type: object
+      required:
+        - accessToken
+        - user
+      properties:
+        accessToken:
+          type: string
+          description: 新的 JWT 存取權杖（1 天後過期）
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/UserInfo'
     JourneyListItem:
       type: object
       required:

@@ -1,5 +1,7 @@
 services:
-  backend:
+  backend-java:
+    profiles: ["java"]
+    container_name: backend
     build:
       context: ./www_root/waterballsa-backend
       dockerfile: ../../java/docker_file/Dockerfile
@@ -26,13 +28,54 @@ services:
       retries: 10
       start_period: 30s
 
+  backend-golang:
+    # Default backend - use COMPOSE_PROFILES=golang (default in .env.example)
+    profiles: ["golang"]
+    container_name: backend
+    build:
+      context: ./www_root/waterballsa-backend-golang
+      dockerfile: ../../golang/docker_file/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_SSLMODE=disable
+      - SERVER_PORT=8080
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - RATE_LIMIT_ENABLED=${RATE_LIMIT_ENABLED}
+    env_file:
+      - .env
+      - .env.golang
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - ./www_root/waterballsa-backend-golang:/app
+      - /app/tmp
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   frontend:
     build:
       context: ./www_root/waterballsa-frontend
       dockerfile: ../../next/docker_file/Dockerfile
     depends_on:
-      backend:
+      backend-java:
         condition: service_healthy
+        required: false
+      backend-golang:
+        condition: service_healthy
+        required: false
     environment:
       - NEXT_PUBLIC_API_URL=/api
       - NEXT_PUBLIC_API_URL_INTERNAL=http://backend:8080
@@ -47,10 +90,10 @@ services:
       - frontend_next_cache:/app/.next
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
-      interval: 30s
+      interval: 5s
       timeout: 3s
-      start_period: 10s
-      retries: 3
+      start_period: 30s
+      retries: 5
 
   ssl-init:
     image: alpine:latest
@@ -71,13 +114,18 @@ services:
 
   web_service:
     image: nginx:alpine
+    restart: unless-stopped
     depends_on:
       ssl-init:
         condition: service_completed_successfully
       frontend:
         condition: service_healthy
-      backend:
+      backend-java:
         condition: service_healthy
+        required: false
+      backend-golang:
+        condition: service_healthy
+        required: false
     ports:
       - "80:80"
       - "443:443"

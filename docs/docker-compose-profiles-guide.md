@@ -1,150 +1,116 @@
-# Docker Compose Profiles 實作指南
+# Docker Compose Profiles 實作指南 - 後端切換
 
-> **前置條件**: 本指南假設你已有 Java (Spring Boot) + Next.js 的環境在運行。
+> **情境**: 本指南專注於在 Java 和 Golang 後端之間切換，前端固定使用 Next.js。
 
 ## Part 1: Quick Reference
 
-### 可用的技術棧組合
+### 可用的後端
 
-| Backend | Frontend    | 啟動命令                                            |
-| ------- | ----------- | --------------------------------------------------- |
-| Java    | Next.js     | `docker compose --profile java --profile nextjs up` |
-| **Go**  | **Next.js** | `docker compose up` **(預設)**                      |
+| Backend    | 啟動命令                                                                        |
+| ---------- | ------------------------------------------------------------------------------- |
+| **Golang** | `docker compose up` **(預設，需要在 .env 中設定 COMPOSE_PROFILES=golang)**      |
+| Java       | `COMPOSE_PROFILES=java docker compose up` 或 `docker compose --profile java up` |
+
+> **注意**：`.env` 檔案不會被 Git 追蹤。請參考 `.env.example` 建立您的本地 `.env` 檔案。
 
 ### 檔案結構
 
 ```
 /
 ├── docker-compose.yml
-├── .env, .env.go, .env.java, .env.nextjs
+├── .env                             # 共用環境變數（包含 COMPOSE_PROFILES）
+├── .env.golang                      # Golang 專用環境變數
 ├── www_root/
-│   ├── waterballsa-backend/          # Java (現有)
-│   ├── waterballsa-backend-golang/   # Go (新增)
-│   └── waterballsa-frontend/         # Next.js (現有)
-├── golang/docker_file/Dockerfile     # Go Dockerfile
+│   ├── waterballsa-backend/        # Java Spring Boot
+│   ├── waterballsa-backend-golang/ # Golang 應用
+│   └── waterballsa-frontend/       # Next.js（固定不變）
+├── golang/docker_file/Dockerfile   # Go Dockerfile
+├── java/docker_file/Dockerfile     # Java Dockerfile
 └── web_service/etc/nginx/conf.d/
-    ├── backend.conf                  # 共用 API 路由
-    └── frontend-nextjs.conf          # Next.js SSR
+    └── www.conf                    # 統一的 Nginx 配置（不需拆分）
 ```
 
 ---
 
-## Part 2: 新增 Go Backend
+## Part 2: 配置說明
 
-**前置條件**: 已有 Java + Next.js 運行
+### 核心概念
 
-### Step 1: 建立 Go Repository
+#### 1. Docker Compose Profiles
 
-**操作**:
+使用 profiles 來控制啟動哪個後端：
 
-```bash
-# 在其他位置建立 Go 專案
-mkdir waterballsa-backend-golang
-cd waterballsa-backend-golang
-go mod init github.com/yourusername/waterballsa-backend-golang
+- **`backend-java`**: `profiles: ['java']` - 只有在指定 `java` profile 時啟動
+- **`backend-golang`**: `profiles: ['golang']` - 只有在指定 `golang` profile 時啟動
+- **其他服務**（frontend, web_service, db）: 沒有 profile，永遠啟動
 
-# 建立基本結構
-mkdir -p cmd/server internal/{api,model,repository}
-touch cmd/server/main.go
+#### 2. 預設後端設定
 
-# 初始化 git
-git init
-git remote add origin https://github.com/yourusername/waterballsa-backend-golang.git
+在 `.env` 檔案中設定 `COMPOSE_PROFILES=golang`，這樣 `docker compose up` 會預設使用 Golang 後端。
 
-# 回到主專案，clone 進來
-cd /path/to/waterballsa-project
-git clone https://github.com/yourusername/waterballsa-backend-golang.git www_root/waterballsa-backend-golang
-```
+**重要**：
 
-**驗證**:
+- `.env` 檔案包含敏感資訊（密碼、JWT secret），**不應該被 Git 追蹤**
+- 在本地開發時，從 `.env.example` 複製並建立 `.env` 檔案
+- 在生產環境部署時，透過 CI/CD 或容器平台的環境變數功能注入 `COMPOSE_PROFILES`
 
-```bash
-ls www_root/waterballsa-backend-golang
-# 應該看到: cmd/ internal/ go.mod
-```
+#### 3. 容器名稱統一
 
-### Step 2: 建立 Dockerfile
+兩個後端都使用 `container_name: backend`，這樣：
 
-**操作**: 在 `golang/docker_file/Dockerfile` 建立檔案
+- Nginx 的 `proxy_pass http://backend:8080/` 會自動路由到當前啟動的後端
+- 不需要修改 Nginx 配置
+- 不需要修改前端配置
 
-```dockerfile
-FROM golang:1.21-alpine
-WORKDIR /app
+#### 4. 網絡配置
 
-# Install curl for healthcheck and Air for hot reload
-RUN apk add --no-cache curl git && \
-    go install github.com/cosmtrek/air@latest
+不需要明確定義 networks，Docker Compose 會自動：
 
-# 依賴會透過 volume mount 提供
-COPY go.mod go.sum ./
-RUN go mod download
+1. 建立預設網絡（`waterballsa-project_default`）
+2. 將所有服務加入這個網絡
+3. 啟用 DNS 解析
 
-EXPOSE 8080
+### 關鍵配置段落
 
-CMD ["air", "-c", ".air.toml"]
-```
+#### Backend Services 配置
 
-**操作**: 在 Go 專案根目錄建立 `.air.toml`
-
-```toml
-root = "."
-tmp_dir = "tmp"
-
-[build]
-  bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main ."
-  delay = 1000
-  exclude_dir = ["tmp", "vendor"]
-  include_ext = ["go"]
-
-[log]
-  time = false
-```
-
-**驗證**:
-
-```bash
-docker build -t test-go-backend -f golang/docker_file/Dockerfile www_root/waterballsa-backend-golang
-# 應該成功 build
-```
-
-### Step 3: 配置環境變數
-
-**操作**: 建立 `.env.go`
-
-```env
-# Application
-APP_ENV=development
-LOG_LEVEL=debug
-GIN_MODE=debug
-
-# Database
-DB_SSLMODE=disable
-DB_MAX_OPEN_CONNS=25
-DB_MAX_IDLE_CONNS=5
-
-# CORS
-CORS_ALLOWED_ORIGINS=http://localhost:3000,https://localhost
-CORS_ALLOW_CREDENTIALS=true
-
-# JWT
-JWT_EXPIRATION_HOURS=24
-```
-
-**驗證**:
-
-```bash
-cat .env.go
-# 確認檔案內容正確
-```
-
-### Step 4: 更新 docker-compose.yml
-
-**操作**: 在 `services:` 區塊加入以下內容
+**Java Backend**:
 
 ```yaml
-backend-go:
-  profiles: ['go', 'default']
+backend-java:
+  profiles: ['java']
+  container_name: backend
+  build:
+    context: ./www_root/waterballsa-backend
+    dockerfile: ../../java/docker_file/Dockerfile
+  depends_on:
+    db:
+      condition: service_healthy
+  environment:
+    - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
+    - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+    - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    - SERVER_PORT=8080
+  ports:
+    - '${BACKEND_PORT:-8080}:8080'
+  volumes:
+    - ./www_root/waterballsa-backend/src:/app/src
+    - ./www_root/waterballsa-backend/pom.xml:/app/pom.xml
+    - ./www_root/waterballsa-backend/checkstyle.xml:/app/checkstyle.xml
+  healthcheck:
+    test: ['CMD-SHELL', 'curl -f http://localhost:8080/actuator/health || exit 1']
+    interval: 15s
+    timeout: 15s
+    retries: 10
+    start_period: 30s
+```
+
+**Golang Backend**:
+
+```yaml
+backend-golang:
+  profiles: ['golang']
   container_name: backend
   build:
     context: ./www_root/waterballsa-backend-golang
@@ -163,7 +129,7 @@ backend-go:
     - JWT_SECRET=${JWT_SECRET}
   env_file:
     - .env
-    - .env.go
+    - .env.golang
   ports:
     - '${BACKEND_PORT:-8080}:8080'
   volumes:
@@ -171,162 +137,137 @@ backend-go:
     - /app/vendor
     - /app/tmp
   healthcheck:
-    test: ['CMD-SHELL', 'curl -f http://localhost:8080/health || exit 1']
+    test: ['CMD-SHELL', 'curl -f http://localhost:8080/healthz || exit 1']
     interval: 10s
     timeout: 5s
     retries: 5
     start_period: 20s
-  networks:
-    - app-network
 ```
 
-**驗證**:
+#### Frontend 和 Web Service 配置
 
-```bash
-docker compose config
-# 檢查沒有語法錯誤
+**Frontend**（依賴任一後端）:
+
+```yaml
+frontend:
+  build:
+    context: ./www_root/waterballsa-frontend
+    dockerfile: ../../next/docker_file/Dockerfile
+  depends_on:
+    backend-java:
+      condition: service_healthy
+      required: false
+    backend-golang:
+      condition: service_healthy
+      required: false
+  # ... 其他配置
 ```
 
-### Step 5: 分離 Nginx 配置 (一次性操作)
-
-**操作**: 將現有的 `web_service/etc/nginx/conf.d/www.conf` 拆分成兩個檔案
-
-**建立 `web_service/etc/nginx/conf.d/backend.conf`**:
-
-```nginx
-# API proxy - 適用於所有後端
-location /api/ {
-    proxy_pass http://backend:8080/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    # Timeout 設定
-    proxy_connect_timeout 60s;
-    proxy_send_timeout 60s;
-    proxy_read_timeout 60s;
-}
-```
-
-**建立 `web_service/etc/nginx/conf.d/frontend-nextjs.conf`**:
-
-```nginx
-# Next.js SSR
-location / {
-    proxy_pass http://frontend:3000;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    # WebSocket support for HMR
-    proxy_buffering off;
-}
-```
-
-**刪除或重命名**: `www.conf` → `www.conf.backup`
-
-**驗證**:
-
-```bash
-docker run --rm -v $(pwd)/web_service/etc/nginx/conf.d:/etc/nginx/conf.d nginx:alpine nginx -t
-# 應該顯示: configuration file is ok
-```
-
-### Step 6: 更新 web_service (一次性操作)
-
-**操作**: 在 docker-compose.yml 中，將現有的 `web_service` 改為 `web_service_nextjs`
-
-**修改前**:
+**Web Service**（依賴任一後端）:
 
 ```yaml
 web_service:
   image: nginx:alpine
-  # ...
-```
-
-**修改後**:
-
-```yaml
-web_service_nextjs:
-  profiles: ['nextjs', 'default']
-  container_name: web_service
-  image: nginx:alpine
   depends_on:
     ssl-init:
       condition: service_completed_successfully
-    frontend-nextjs:
+    frontend:
       condition: service_healthy
     backend-java:
       condition: service_healthy
       required: false
-    backend-go:
+    backend-golang:
       condition: service_healthy
       required: false
-  ports:
-    - '80:80'
-    - '443:443'
-  volumes:
-    - ./web_service/etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    - ./web_service/etc/nginx/conf.d/backend.conf:/etc/nginx/conf.d/backend.conf:ro
-    - ./web_service/etc/nginx/conf.d/frontend-nextjs.conf:/etc/nginx/conf.d/frontend.conf:ro
-    - ./web_service/etc/nginx/ssl:/etc/nginx/ssl:ro
-  healthcheck:
-    test: ['CMD-SHELL', 'curl -f http://localhost || exit 1']
-    interval: 10s
-    timeout: 3s
-    retries: 3
-    start_period: 5s
-  networks:
-    - app-network
+  # ... 其他配置
 ```
 
-**驗證**:
+**重點**：使用 `required: false` 讓服務可以依賴任一後端，只要有一個後端健康即可啟動。
+
+---
+
+## Part 3: 使用方式
+
+### 啟動服務
+
+**使用 Golang 後端（預設）**:
+
+```bash
+docker compose up -d
+```
+
+**使用 Java 後端**:
+
+```bash
+# 方法 1: 透過環境變數
+COMPOSE_PROFILES=java docker compose up -d
+
+# 方法 2: 透過 --profile 參數
+docker compose --profile java up -d
+```
+
+**切換後端**:
+
+```bash
+# 先停止當前服務
+docker compose down
+
+# 啟動另一個後端
+COMPOSE_PROFILES=java docker compose up -d
+```
+
+### 查看當前配置
+
+**查看將會啟動的服務**:
+
+```bash
+# 預設（Golang）
+docker compose config --services
+
+# Java
+COMPOSE_PROFILES=java docker compose config --services
+```
+
+**查看完整配置**:
 
 ```bash
 docker compose config
-# 確認配置正確
 ```
 
-### Step 7: 測試 Go Backend
-
-**操作**: 啟動 Go backend
+### 查看日誌
 
 ```bash
-# 停止現有服務
-docker compose down
-
-# 啟動 Go backend + Next.js frontend (預設)
-docker compose up -d
-
-# 查看日誌
+# 查看後端日誌
 docker compose logs -f backend
-```
 
-**驗證**:
-
-```bash
-# 1. 檢查容器狀態
-docker compose ps
-# backend 應該是 healthy
-
-# 2. 測試 API
-curl http://localhost:8080/health
-# 應該返回成功
-
-# 3. 測試 hot reload
-# 修改 Go 代碼，觀察日誌是否自動重新編譯
+# 查看所有服務日誌
+docker compose logs -f
 ```
 
 ---
 
-## Part 3: 故障排除
+## Part 4: 故障排除
 
-### 問題 1: Profile 未啟動對應服務
+### 問題 1: 兩個後端同時啟動
+
+**症狀**: `docker compose ps` 顯示 `backend-java` 和 `backend-golang` 同時運行
+
+**原因**: 可能同時指定了多個 profiles
+
+**解決**:
+
+```bash
+# 檢查環境變數
+echo $COMPOSE_PROFILES
+
+# 停止所有服務
+docker compose --profile java --profile golang down
+
+# 只啟動一個
+docker compose up -d  # 只會啟動 golang（預設）
+```
+
+### 問題 2: Profile 未啟動對應服務
 
 **症狀**: `docker compose --profile java up` 但 backend-java 沒有啟動
 
@@ -340,10 +281,13 @@ docker compose config --profiles
 docker compose --profile java config --services
 
 # 確認 YAML 縮排正確
+docker compose config
+
 # 確認使用 docker compose (v2) 而非 docker-compose (v1)
+docker compose version
 ```
 
-### 問題 2: 健康檢查一直失敗
+### 問題 3: 健康檢查一直失敗
 
 **症狀**: `docker compose ps` 顯示 backend 長時間卡在 `starting`
 
@@ -354,16 +298,17 @@ docker compose --profile java config --services
 docker compose logs backend
 
 # 手動測試健康檢查
-docker compose exec backend curl -f http://localhost:8080/health
+docker compose exec backend curl -f http://localhost:8080/healthz  # Golang
+docker compose exec backend curl -f http://localhost:8080/actuator/health  # Java
 
 # 檢查應用是否在監聽正確端口
 docker compose exec backend netstat -tlnp
 
-# 增加 start_period 時間（特別是 Java 應用）
-# 在 healthcheck 中加入: start_period: 60s
+# 如果是 Java，可能需要增加 start_period
+# 在 healthcheck 中: start_period: 60s
 ```
 
-### 問題 3: Nginx 404 Not Found
+### 問題 4: Nginx 404 Not Found
 
 **症狀**: 訪問 `http://localhost/api/users` 返回 404
 
@@ -377,326 +322,196 @@ docker compose exec web_service nginx -t
 docker compose logs web_service
 
 # 確認配置檔案是否正確掛載
-docker compose exec web_service cat /etc/nginx/conf.d/backend.conf
+docker compose exec web_service cat /etc/nginx/conf.d/www.conf
 
 # 直接訪問後端測試
-curl http://localhost:8080/users
+curl http://localhost:8080/users  # 或其他 API 路徑
 ```
 
-### 問題 4: Hot Reload 不工作
+### 問題 5: 環境變數檔案找不到
 
-**症狀**: 修改代碼後，應用沒有自動重新載入
+**症狀**: `env file .env.golang not found`
 
 **解決**:
 
 ```bash
-# Go: 確認 Air 正在運行
-docker compose logs backend | grep -i air
+# 檢查檔案是否存在
+ls -la .env.golang
 
-# Next.js: 確認 npm run dev 在執行
-docker compose logs frontend | grep -i "ready"
+# 如果不存在，建立檔案
+cat > .env.golang << 'EOF'
+# Application
+APP_ENV=development
+LOG_LEVEL=debug
+GIN_MODE=debug
 
-# 檢查 volume mount
-docker compose exec backend ls -la /app/src
+# Database
+DB_SSLMODE=disable
+DB_MAX_OPEN_CONNS=25
+DB_MAX_IDLE_CONNS=5
 
-# 重新掛載 volume
-docker compose down && docker compose up
-```
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://localhost
 
-### 問題 5: Volume Mount 衝突
-
-**症狀**: `Error: named volume "frontend_node_modules" is declared as external`
-
-**解決**:
-
-```bash
-# 列出所有 volumes
-docker volume ls
-
-# 清除未使用的 volumes
-docker volume prune
-
-# 或強制移除特定 volume
-docker volume rm frontend_nextjs_node_modules
+# JWT
+JWT_EXPIRATION_HOURS=24
+EOF
 ```
 
 ---
 
-## 附錄: 完整配置參考
+## Part 5: 環境變數說明
 
-### 完整 docker-compose.yml
-
-<details>
-<summary>點擊展開完整配置</summary>
-
-```yaml
-services:
-  # ============================================
-  # Backend Services
-  # ============================================
-
-  backend-java:
-    profiles: ['java']
-    container_name: backend
-    build:
-      context: ./www_root/waterballsa-backend
-      dockerfile: ../../java/docker_file/Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SERVER_PORT=8080
-      - JWT_SECRET=${JWT_SECRET}
-    env_file:
-      - .env
-      - .env.java
-    ports:
-      - '${BACKEND_PORT:-8080}:8080'
-    volumes:
-      - ./www_root/waterballsa-backend/src:/app/src
-      - ./www_root/waterballsa-backend/pom.xml:/app/pom.xml
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:8080/actuator/health || exit 1']
-      interval: 15s
-      timeout: 15s
-      retries: 10
-      start_period: 30s
-    networks:
-      - app-network
-
-  backend-go:
-    profiles: ['go', 'default']
-    container_name: backend
-    build:
-      context: ./www_root/waterballsa-backend-golang
-      dockerfile: ../../golang/docker_file/Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=${POSTGRES_DB}
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - DB_SSLMODE=disable
-      - SERVER_PORT=8080
-      - JWT_SECRET=${JWT_SECRET}
-    env_file:
-      - .env
-      - .env.go
-    ports:
-      - '${BACKEND_PORT:-8080}:8080'
-    volumes:
-      - ./www_root/waterballsa-backend-golang:/app
-      - /app/vendor
-      - /app/tmp
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:8080/health || exit 1']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    networks:
-      - app-network
-
-  # ============================================
-  # Frontend Services
-  # ============================================
-
-  frontend-nextjs:
-    profiles: ['nextjs', 'default']
-    container_name: frontend
-    build:
-      context: ./www_root/waterballsa-frontend
-      dockerfile: ../../next/docker_file/Dockerfile
-    depends_on:
-      backend-java:
-        condition: service_healthy
-        required: false
-      backend-go:
-        condition: service_healthy
-        required: false
-    environment:
-      - NEXT_PUBLIC_API_URL=/api
-      - NEXT_PUBLIC_API_URL_INTERNAL=http://backend:8080
-      - NODE_ENV=development
-    env_file:
-      - .env
-      - .env.nextjs
-    ports:
-      - '${FRONTEND_PORT:-3000}:3000'
-    volumes:
-      - ./www_root/waterballsa-frontend:/app
-      - frontend_nextjs_node_modules:/app/node_modules
-      - frontend_nextjs_next_cache:/app/.next
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:3000 || exit 1']
-      interval: 30s
-      timeout: 3s
-      start_period: 10s
-      retries: 3
-    networks:
-      - app-network
-
-  # ============================================
-  # Reverse Proxy (Nginx)
-  # ============================================
-
-  web_service_nextjs:
-    profiles: ['nextjs', 'default']
-    container_name: web_service
-    image: nginx:alpine
-    depends_on:
-      ssl-init:
-        condition: service_completed_successfully
-      frontend-nextjs:
-        condition: service_healthy
-      backend-java:
-        condition: service_healthy
-        required: false
-      backend-go:
-        condition: service_healthy
-        required: false
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./web_service/etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./web_service/etc/nginx/conf.d/backend.conf:/etc/nginx/conf.d/backend.conf:ro
-      - ./web_service/etc/nginx/conf.d/frontend-nextjs.conf:/etc/nginx/conf.d/frontend.conf:ro
-      - ./web_service/etc/nginx/ssl:/etc/nginx/ssl:ro
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost || exit 1']
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 5s
-    networks:
-      - app-network
-
-  # ============================================
-  # Shared Services (Always Active)
-  # ============================================
-
-  ssl-init:
-    image: alpine:latest
-    volumes:
-      - ./web_service/etc/nginx/ssl:/ssl
-    command:
-      - sh
-      - -c
-      - |
-        apk add --no-cache openssl
-        if [ ! -f /ssl/localhost.crt ]; then
-          echo 'Generating self-signed SSL certificate...'
-          openssl req -x509 -out /ssl/localhost.crt -keyout /ssl/localhost.key \
-            -newkey rsa:2048 -nodes -sha256 \
-            -subj '/CN=localhost' -days 365
-          echo 'SSL certificate generated successfully.'
-        else
-          echo 'SSL certificate already exists, skipping generation.'
-        fi
-    networks:
-      - app-network
-
-  db:
-    platform: linux/amd64
-    image: postgres:${POSTGRES_VERSION:-16-alpine}
-    restart: always
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    ports:
-      - '${HOST_POSTGRES_PORT:-5432}:5432'
-    volumes:
-      - ./db/postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app-network
-
-# ============================================
-# Volumes
-# ============================================
-volumes:
-  frontend_nextjs_node_modules:
-  frontend_nextjs_next_cache:
-
-# ============================================
-# Networks
-# ============================================
-networks:
-  app-network:
-    driver: bridge
-```
-
-</details>
-
-### 所有環境變數檔案
-
-**`.env` (共用)**:
+### `.env`（共用）
 
 ```env
 # Database Configuration
 POSTGRES_VERSION=16-alpine
 POSTGRES_DB=waterballsa
 POSTGRES_USER=admin
-POSTGRES_PASSWORD=change_me_in_production
+POSTGRES_PASSWORD=postgres123
 HOST_POSTGRES_PORT=5432
 
-# Service Ports
+# Docker Compose Profiles (default: golang backend)
+COMPOSE_PROFILES=golang
+
+# Backend Configuration
 BACKEND_PORT=8080
+
+# Frontend Configuration
 FRONTEND_PORT=3000
 
-# Security
+# JWT Secret
 JWT_SECRET=your_jwt_secret_key_change_in_production
 ```
 
-**`.env.java`**:
+### `.env.golang`（Golang 專用）
 
 ```env
-SPRING_PROFILES_ACTIVE=dev
-LOGGING_LEVEL_ROOT=INFO
-LOGGING_LEVEL_COM_WATERBALLSA=DEBUG
-SPRING_JPA_SHOW_SQL=true
-```
-
-**`.env.go`**:
-
-```env
+# Application
 APP_ENV=development
 LOG_LEVEL=debug
 GIN_MODE=debug
+
+# Database
 DB_SSLMODE=disable
+DB_MAX_OPEN_CONNS=25
+DB_MAX_IDLE_CONNS=5
+
+# CORS
 CORS_ALLOWED_ORIGINS=http://localhost:3000,https://localhost
+
+# JWT
 JWT_EXPIRATION_HOURS=24
-```
-
-**`.env.nextjs`**:
-
-```env
-NODE_ENV=development
-NEXT_PUBLIC_API_URL=/api
-NEXT_PUBLIC_API_URL_INTERNAL=http://backend:8080
-NEXT_PUBLIC_ENABLE_BETA_FEATURES=true
 ```
 
 ---
 
+## Part 6: 容器化部署指南
+
+### 本地開發
+
+```bash
+# 1. 從 .env.example 複製並建立 .env
+cp .env.example .env
+
+# 2. 編輯 .env，設定 COMPOSE_PROFILES=golang（或 java）
+# 也要設定資料庫密碼、JWT secret 等
+
+# 3. 啟動服務
+docker compose up -d
+```
+
+### CI/CD 部署
+
+在 CI/CD pipeline 中，透過環境變數注入：
+
+```bash
+# 方法 1: 使用環境變數
+export COMPOSE_PROFILES=golang
+export POSTGRES_PASSWORD=secure_password
+export JWT_SECRET=secure_jwt_secret
+docker compose up -d
+
+# 方法 2: 使用 --profile 參數
+docker compose --profile golang up -d
+
+# 方法 3: 在 docker-compose 命令前設定環境變數
+COMPOSE_PROFILES=golang \
+POSTGRES_PASSWORD=secure_password \
+JWT_SECRET=secure_jwt_secret \
+docker compose up -d
+```
+
+### 雲端平台部署範例
+
+#### Docker Swarm
+
+```bash
+# 在 swarm manager 設定環境變數
+docker secret create postgres_password <password_file>
+docker secret create jwt_secret <jwt_file>
+
+# 部署時指定 profile
+COMPOSE_PROFILES=golang docker stack deploy -c docker-compose.yml myapp
+```
+
+#### Kubernetes（使用 kompose）
+
+```bash
+# 設定環境變數
+export COMPOSE_PROFILES=golang
+kompose convert
+
+# 建立 secrets
+kubectl create secret generic app-secrets \
+  --from-literal=postgres-password=<password> \
+  --from-literal=jwt-secret=<jwt>
+```
+
+#### AWS ECS / Azure Container Instances
+
+在任務定義或容器組設定中添加環境變數：
+
+- `COMPOSE_PROFILES=golang`
+- `POSTGRES_PASSWORD=xxx`
+- `JWT_SECRET=xxx`
+
 ## 總結
 
-完成本指南後，你將擁有一個靈活的 Docker Compose 配置，可以輕鬆在不同技術棧間切換:
+### 配置重點
 
-- ✅ Go Backend (約 30-40 分鐘)
-- ✅ 支援 2 種 Backend (Java/Go) 搭配 Next.js Frontend
-- ✅ 統一的開發環境和部署流程
-- ✅ 本地開發使用 Docker，生產環境 Frontend 可部署至 Vercel
+1. ✅ **Profile 控制後端切換**
+
+   - `backend-java`: `profiles: ['java']`
+   - `backend-golang`: `profiles: ['golang']`
+   - 預設使用環境變數 `COMPOSE_PROFILES=golang`
+   - `.env` 檔案不會被 Git 追蹤，部署時需要另外設定
+
+2. ✅ **統一的容器名稱**
+
+   - 兩個後端都使用 `container_name: backend`
+   - Nginx 配置不需要修改
+
+3. ✅ **不需要複雜的網絡配置**
+
+   - Docker Compose 自動建立預設網絡
+   - 所有服務可以互相通訊
+
+4. ✅ **靈活的依賴關係**
+   - Frontend 和 Web Service 使用 `required: false`
+   - 可以依賴任一後端
+
+### 為什麼不需要拆分 Nginx 配置？
+
+- ✅ 兩個後端都使用相同的 API 路徑 `/api/`
+- ✅ 前端保持不變（都是 Next.js）
+- ✅ 容器名稱統一為 `backend`
+- ✅ Nginx 的 `proxy_pass http://backend:8080/` 會自動路由到當前啟動的後端
+
+### 優勢
+
+- 簡單明瞭的切換方式
+- 最小化配置變更
+- 前端和 Nginx 配置保持穩定
+- 易於維護和擴展

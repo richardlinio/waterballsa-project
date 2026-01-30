@@ -48,6 +48,9 @@ paths:
   /auth/logout:
     $ref: './openapi/paths/auth.yaml#/logout'
 
+  /auth/refresh:
+    $ref: './openapi/paths/auth.yaml#/refresh'
+
   /journeys:
     $ref: './openapi/paths/journeys.yaml#/list'
 
@@ -123,6 +126,8 @@ components:
       $ref: './openapi/schemas/auth.yaml#/UserInfo'
     LogoutResponse:
       $ref: './openapi/schemas/auth.yaml#/LogoutResponse'
+    RefreshResponse:
+      $ref: './openapi/schemas/auth.yaml#/RefreshResponse'
 
     # Journey schemas
     JourneyListItem:

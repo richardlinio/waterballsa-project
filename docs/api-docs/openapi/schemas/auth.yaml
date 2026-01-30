@@ -92,3 +92,16 @@ LogoutResponse:
       type: string
       description: 成功訊息
       example: 'Logout successful'
+
+RefreshResponse:
+  type: object
+  required:
+    - accessToken
+    - user
+  properties:
+    accessToken:
+      type: string
+      description: 新的 JWT 存取權杖（1 天後過期）
+      example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    user:
+      $ref: '#/UserInfo'
