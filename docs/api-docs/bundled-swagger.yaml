@@ -202,17 +202,17 @@ paths:
         - Auth
       summary: 使用者登出
       description: |
-        登出目前使用者並使存取權杖失效。
+        登出目前使用者並清除認證 Cookie。
 
-        **權杖失效化：**
-        - 存取權杖會被加入黑名單（儲存在資料庫中）
+        **不需要認證：** 此端點不要求有效的存取權杖，無論是否已登入皆可呼叫。
+
+        **權杖失效化（盡力而為）：**
+        - 若提供有效的存取權杖，會將其加入黑名單（儲存在資料庫中）
+        - 若提供有效的重新整理權杖，會將其撤銷
         - 黑名單項目會在權杖過期時自動過期
-        - 登出後，權杖無法用於存取受保護的端點
-
-        **注意：** 需要在 Authorization 標頭中提供有效的存取權杖
+        - 若權杖無效或未提供，仍會清除 Cookie 並回傳成功
       operationId: logout
-      security:
-        - bearerAuth: []
+      security: []
       responses:
         '200':
           description: 登出成功
@@ -225,17 +225,6 @@ paths:
                   summary: 登出成功
                   value:
                     message: 登出成功
-        '401':
-          description: 未授權 - 權杖無效或遺失
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                unauthorized:
-                  summary: 權杖無效或遺失
-                  value:
-                    error: 未授權或權杖無效
   /auth/refresh:
     post:
       tags:
